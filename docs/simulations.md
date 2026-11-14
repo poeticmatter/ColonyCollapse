@@ -41,7 +41,29 @@ In one test seat per game, the bot never plays a given action; the next unused a
 - **Media:** a bot that swaps its slot 1 Media for Leverage wins two games in three. Banning Develop and Address helps too, because their replacement is also Leverage.
 - **Bot vs game:** these are as much about the bot's plan preferences (Media early, Develop late) as about the game. Even so, the Dance gap is large enough to point at the action itself.
 
+### 2a. Media: where it goes, and whether to play it at all (after the start player change)
+
+**Adopted:** Media is meant to be a niche action, played only when a flip changes a lot, so the bot no longer programs it at all. The `media` experiment that produced this table was removed with that change.
+
+One seat moves its Media to another slot, keeping its other tiles in order, against normal bots (3 players, 300 games each):
+
+| test seat | wins (fair 33%) | mean VP |
+|---|---|---|
+| Media in slot 1 (as shipped) | 32% | 28.8 |
+| Media in slot 2 | 44% | 31.0 |
+| Media in slot 3 | 42% | 30.7 |
+| Media in slot 4 | 35% | 29.5 |
+| no Media (Leverage in slot 1) | **74%** | 40.3 |
+
+- **Why slot 1:** the bot picks it from a hand-written table. Media ignores X, so it was given a negative per-strength value and goes where strength is cheapest.
+- **Slot 1 flips get undone:** when slot 1 Media fires, the bot does flip a tile (97% of the time). But every bot plays Address in slot 2, and Address flips a tile too, so a slot 1 flip is soon overwritten.
+- **Later is better:** slots 2–3 avoid that and are worth about 10 points of win rate.
+- **Slot 4 is worse:** Media there pushes Dance or Develop out of the strongest slot.
+- **Media itself is the bigger issue:** dropping it for Leverage (one card: a permanent issue bump, or an effect) is far stronger than moving it anywhere.
+
 ### 3. The bot's plans hardly vary, and its planning is its weak point
+
+**Update:** without Media, the bot's plans beat random plans 71% to 33% (it was 40% before), and it beats random play in 100% of 300 games.
 
 - **Plan variety:** only 25 of the 840 possible plans ever appear, and Media → Address → Develop → Dance is 40% of all plans. Intern is almost never programmed (0.3%), and Invest rarely (8%).
 - **Planning vs random:** the heuristic beats random plans by only 40% to 33% when both have the same decision-making. Its decision-making, by contrast, beats random play 96% to 4%.

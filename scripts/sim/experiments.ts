@@ -224,7 +224,8 @@ function ladder(games: number): void {
 function actionBans(games: number, playerCount: number): void {
   console.log(`# Action bans: one seat never programs an action, against heuristic bots, ${games} ${playerCount}-player games each`)
   const fair = 100 / playerCount
-  const rows = ACTION_IDS.map((action) => {
+  // The bot never programs Media, so banning it changes nothing.
+  const rows = ACTION_IDS.filter((action) => action !== 'media').map((action) => {
     const { testWins } = testSeatGames(playerCount, games, banning(action), heuristic)
     return [ACTIONS[action].name, `${percent(testWins, games)} ${marginOfError(testWins, games)}`, fixed((100 * testWins) / games - fair)]
   })

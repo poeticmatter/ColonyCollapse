@@ -112,4 +112,4 @@ Most VP wins. Ties go to the most control discs on the board, then to whoever is
 - Plans are hidden by the board but stored in the shared game record. That's fine for playtests.
 - A tile is revealed when its owner starts that action, so the previous player's screen never shows it early.
 - Undo works within your own turn, except a move that draws (Leverage's cards, or the end of the round's tile refill). The kit warns before such a move and sends the turn at once.
-- **Bots:** the lobby can fill seats with bots in async and live games. They see only what their seat could, and they pass the start player marker whenever a card lets them, so they act last.
+- **Bots:** the lobby can fill seats with bots in async and live games. They see only what their seat could, they pass the start player marker whenever a card lets them, and they never program Media (a niche action they can't judge while planning).
