@@ -138,6 +138,27 @@ Mirror games of the shipped bot, 300 per player count (`contest` experiment).
 - **It builds through the game:** 0.33 rival discs taken per seat in round 1, then 0.93, 1.13, 1.31 and 1.61 in round 5, as tracks rise and more hexes have discs.
 - **Polling matters at 2 players:** with fewer rivals, a seat is more often the single leader of a tile's issue, so polling hands it nearly as many discs (7.7) as its own rallies onto empty hexes.
 
+**How they take rival discs without racing on tracks.** The owner is usually weak on that issue, not a rival who climbed it:
+
+| space on the hex's issue (3 players) | −2 | −1 | 0 | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|---|---|---|
+| previous owner | 2% | 7% | **43%** | 28% | 9% | 10% | 2% |
+| taker | 0% | 1% | 8% | 30% | 19% | **31%** | 11% |
+
+- **Cheap discs, taken by specialists:** 64% of the taken discs had been claimed from an empty hex, which only needs space 0. A seat claims rondel tiles and empty hexes in whatever issue it lands on, and those discs are then picked off by a rival who is higher on that issue. The taker wins by 1.3 spaces on average.
+- **Nobody climbs back:** the owner rarely defends a cheap disc, so it's an uneven trade, not a fight. A real fight, retaking a disc that had itself been taken, is 13% of captures at 2 players, 23% at 3 and 35% at 5.
+- **Flips don't matter:** under 2% of taken hexes had flipped to another issue since the owner took them.
+
+**Acting last helps a little, not a lot.** Captures happen only in slots 3 and 4, where Dance is. Here are rival discs taken per seat-round in slot 4, and in brackets those still held at polling:
+
+| players | 1st to act | middle | last to act |
+|---|---|---|---|
+| 2 | 0.58 (0.57) | | 0.68 (0.68) |
+| 3 | 0.73 (0.68) | 0.76 (0.74) | 0.87 (0.87) |
+| 5 | 0.87 (0.73) | 0.87–0.90 (0.77–0.86) | 0.93 (0.93) |
+
+The last seat to act takes a few more discs and keeps all of them. The first seat to act loses up to 15% of its own back before polling. That's about 0.2 discs per round, an edge that now rotates with the start player. The main effect is that **every** seat Dances in slot 4 and takes about one cheap disc each round. Over the game, 90–98% of captures are held to polling.
+
 **The bots climb high, to 3 and then stop.** A seat's best track ends on 3.5 on average, and 98% of seats end with a track on 3 or more (about 54% on 4). That's far higher than finding 4 measured with Media in the plans. Their six tracks, best to worst, after each round (3 players):
 
 | after | best | 2nd | 3rd | 4th | 5th | worst |

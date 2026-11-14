@@ -126,6 +126,69 @@ function trackFights(byCount: Map<number, GameRecord[]>): void {
   console.log(`\nAn overtake is a seat climbing from level with or below a rival on 1+ to above them. A lead change is a track's single leader (on 0+) becoming someone new.`)
 }
 
+interface CaptureContext {
+  capture: DiscChange
+  /** How the previous owner had got this disc. */
+  previous: DiscChange | undefined
+  /** No one else took the hex before the round's polling. */
+  isHeld: boolean
+}
+
+function captureContexts(record: GameRecord): CaptureContext[] {
+  return record.discChanges.flatMap((change, index) => {
+    if (!isCapture(change)) return []
+    const earlier = record.discChanges.slice(0, index).filter((other) => other.site === change.site)
+    const later = record.discChanges.slice(index + 1).find((other) => other.site === change.site && other.round === change.round)
+    return [{ capture: change, previous: earlier[earlier.length - 1], isHeld: later === undefined }]
+  })
+}
+
+function previousGain(context: CaptureContext): string {
+  const { previous } = context
+  if (previous === undefined) return 'unknown'
+  if (previous.source === 'polling') return 'polling'
+  return previous.from === null ? 'empty-hex rally' : 'capture'
+}
+
+function captureAnatomy(records: GameRecord[], playerCount: number): void {
+  heading(`How rival discs are taken (${playerCount} players)`)
+  const contexts = records.flatMap(captureContexts)
+  const total = contexts.length
+  const spaceRows = TRACK_SPACES.map((space) => [
+    space,
+    percent(contexts.filter(({ capture }) => capture.fromSpace === space).length, total),
+    percent(contexts.filter(({ capture }) => capture.seatSpace === space).length, total),
+  ])
+  console.log(table(["space on the hex's issue", 'previous owner', 'taker'], spaceRows))
+  const margins = contexts.map(({ capture }) => capture.seatSpace - (capture.fromSpace ?? 0))
+  console.log(`
+Mean margin (taker minus owner): ${fixed(mean(margins))}; taken by exactly 1: ${percent(margins.filter((margin) => margin === 1).length, total)}.`)
+  const flipped = contexts.filter(({ capture, previous }) => previous !== undefined && previous.issue !== capture.issue).length
+  console.log(`The hex had flipped to another issue since the owner took it: ${percent(flipped, total)}.`)
+  const gains = ['empty-hex rally', 'polling', 'capture', 'unknown']
+  console.log(table(['the owner had got the disc by', 'share of captures'], gains.map((gain) => [gain, percent(contexts.filter((context) => previousGain(context) === gain).length, total)])))
+}
+
+const ORDINALS = ['1st', '2nd', '3rd', '4th', '5th']
+
+function turnLabel(turn: number, playerCount: number): string {
+  return turn === playerCount - 1 ? 'last to act' : `${ORDINALS[turn]} to act`
+}
+
+function capturesByTurn(records: GameRecord[], playerCount: number): void {
+  heading(`Rival discs taken per seat-round, by slot and by place in the slot's order (${playerCount} players)`)
+  const contexts = records.flatMap(captureContexts)
+  const seatRounds = records.length * ROUNDS.length
+  const turns = Array.from({ length: playerCount }, (_, turn) => turn)
+  const cell = (slot: number, turn: number, isHeldOnly: boolean) =>
+    fixed(contexts.filter(({ capture, isHeld }) => capture.slot === slot && capture.turn === turn && (isHeld || !isHeldOnly)).length / seatRounds, 2)
+  const rows = [1, 2, 3, 4].map((slot) => [`slot ${slot}`, ...turns.map((turn) => `${cell(slot, turn, false)} (held ${cell(slot, turn, true)})`)])
+  console.log(table(['', ...turns.map((turn) => turnLabel(turn, playerCount))], rows))
+  const held = contexts.filter(({ isHeld }) => isHeld).length
+  console.log(`
+"Held" means no one took the hex back before polling. Captures held overall: ${percent(held, contexts.length)}.`)
+}
+
 export function contest(games: number): void {
   const byCount = new Map(PLAYER_COUNTS.map((count) => [count, mirrorGames(count, games)]))
   console.log(`# Contest: ${games} mirror games per player count, every seat the heuristic bot`)
@@ -133,6 +196,10 @@ export function contest(games: number): void {
   for (const count of [3]) {
     capturesByRound(byCount.get(count) ?? [], count)
     capturesByAction(byCount.get(count) ?? [], count)
+  }
+  for (const count of [2, 3, 5]) {
+    captureAnatomy(byCount.get(count) ?? [], count)
+    capturesByTurn(byCount.get(count) ?? [], count)
   }
   trackHeights(byCount)
   for (const count of [3]) trackProfile(byCount.get(count) ?? [], count)
