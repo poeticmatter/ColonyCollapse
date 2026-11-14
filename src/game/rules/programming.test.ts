@@ -1,7 +1,7 @@
 import { IllegalMoveError } from 'game-kit/turns'
 import { describe, expect, it } from 'vitest'
 import { colonyRules, currentTurn, pendingDecision, visiblePlanSlot } from './index'
-import { decide, newGame, planWith, reveal, scenario, send } from './testing/scenario'
+import { decide, edit, newGame, planWith, reveal, scenario, send } from './testing/scenario'
 
 const PLAN = planWith(1, 'address')
 
@@ -113,5 +113,24 @@ describe('resolution order', () => {
     expect(state.phase).toBe('programming')
     expect(state.rondel.every((tile) => tile !== null)).toBe(true)
     expect(Object.keys(state.board)).toHaveLength(6)
+  })
+
+  it('passes the start player one seat clockwise between rounds', () => {
+    const plan = ['address', 'develop', 'invest', 'intern'] as const
+    let state = scenario({ playerCount: 3, slot: 4, startPlayer: 2, plans: { 0: [...plan], 1: [...plan], 2: [...plan] } })
+    for (let seat = 0; seat < 3; seat += 1) {
+      state = decide(reveal(state), { kind: 'invest', transfer: null })
+    }
+    expect(state.startPlayer).toBe(0)
+  })
+
+  it('keeps the start player after the final round, for the tiebreak', () => {
+    const plan = ['address', 'develop', 'invest', 'intern'] as const
+    let state = scenario({ playerCount: 2, slot: 4, startPlayer: 1, plans: { 0: [...plan], 1: [...plan] } })
+    state = edit(state, (draft) => { draft.round = 5 })
+    for (let seat = 0; seat < 2; seat += 1) {
+      state = decide(reveal(state), { kind: 'invest', transfer: null })
+    }
+    expect(state.startPlayer).toBe(1)
   })
 })

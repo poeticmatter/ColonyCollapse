@@ -6,7 +6,7 @@ import { runPolling } from './polling'
 import { drawRandomIndex } from './rng'
 import { getResolution } from './stack'
 import type { GameState, SlotNumber } from './types'
-import { range } from './util'
+import { range, seatName } from './util'
 
 const TILE_SIDES = 2
 
@@ -44,6 +44,15 @@ export function beginResolving(state: GameState): void {
   beginSlot(state, SLOT_NUMBERS[0])
 }
 
+/**
+ * Between rounds the marker moves one seat clockwise, so nobody acts last in every slot of
+ * the game (simulations showed the last seat winning about twice its share without this).
+ */
+function passStartPlayer(state: GameState): void {
+  state.startPlayer = (state.startPlayer + 1) % state.playerCount
+  logEvent(state, state.startPlayer, `${seatName(state.startPlayer)} is now the start player.`)
+}
+
 function finishRound(state: GameState): void {
   state.resolution = null
   runPolling(state)
@@ -53,6 +62,7 @@ function finishRound(state: GameState): void {
     return
   }
   state.round = ROUNDS[state.round]
+  passStartPlayer(state)
   refillRondel(state)
   beginProgramming(state)
   logEvent(state, null, `Round ${state.round} begins: choose your four actions.`)

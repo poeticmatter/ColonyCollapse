@@ -25,6 +25,7 @@ Source: `Colony Collapse - Rules v7.1 11-02-26.md`, plus the designer's answers 
 2. **Programming:** every player at once, secretly, puts 4 *different* tiles of their 7 into slots 1–4. The other 3 are their unprogrammed ("set aside") tiles this round. A plan can be changed until it is sent, and it can't be changed after that.
 3. **Resolution:** slots 1→4. Each slot, in clockwise seat order from the start player as of the start of that slot, each player reveals their tile and resolves it at **strength X = slot number**, on the tile's current side.
 4. **Polling** (below).
+5. **Pass the start player marker** one seat clockwise (not after round 5). **[designer, after simulations]** Without this the same player acts last in every slot all game, and in bot games that seat won about twice its share.
 
 The game ends after round 5's polling.
 
@@ -104,7 +105,7 @@ To rally a hex (a tile or a printed hex; never the hub or an empty slot) means c
 
 ## Game end
 
-Most VP wins. Ties go to the most control discs on the board, then to whoever is earliest in clockwise order from the final start player.
+Most VP wins. Ties go to the most control discs on the board, then to whoever is earliest in clockwise order from the final start player (round 5's, since the marker doesn't pass after the last round).
 
 ## Digital-only
 

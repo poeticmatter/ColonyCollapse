@@ -15,7 +15,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sim": "vite-node scripts/sim/experiments.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
