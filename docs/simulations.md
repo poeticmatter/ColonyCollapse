@@ -2,7 +2,7 @@
 
 About 9,000 games between bots, with no search: every seat is the shipped heuristic bot (`src/game/bot`) or a simple variant of it. The bot looks one or two decisions ahead and plans from fixed per-slot preferences, so these results describe how *this bot* plays the game. Treat them as pointers for playtesting, not proof.
 
-Run them again with `npm run sim -- <experiment> <games>`; experiments are `baseline`, `ladder`, `bans`, `marker`, `actions` (optionally `actions 300 dance` for one action) (code in `scripts/sim/`). Findings 2–7 were measured before the start player started passing between rounds. A game takes 0.1–0.3 s. With 400 games, a win rate is good to about ±5 points; with 300, ±5.5.
+Run them again with `npm run sim -- <experiment> <games>`; experiments are `baseline`, `ladder`, `bans`, `marker`, `contest`, `actions` (optionally `actions 300 dance` for one action) (code in `scripts/sim/`). Findings 2–7 were measured before the start player started passing between rounds. A game takes 0.1–0.3 s. With 400 games, a win rate is good to about ±5 points; with 300, ±5.5.
 
 ## Findings
 
@@ -72,6 +72,8 @@ One seat moves its Media to another slot, keeping its other tiles in order, agai
 
 ### 4. Upgrades come late and don't pay off
 
+**Outdated on track heights:** since the bot stopped programming Media it climbs much higher; see finding 9. The upgrade timing and value figures below haven't been re-measured.
+
 - **Timing:** upgrades happen around round 4 on average. A track action ends the game upgraded in 12–22% of seat-games.
 - **Value:** more upgrades go with *fewer* wins: 35% with 0 upgrades, 27% with 3. Climbing a track to 3 costs tempo that the upgrade doesn't repay in the rounds left.
 - **The set-aside action:** it was never upgraded. The bot almost never plays Blueprint Revision's effect (2% of the times it keeps the card).
@@ -118,6 +120,46 @@ Mean VP follows the same pattern, from 9.1 (never Dance) to 33.4 (Dance always i
 - **Intern is never worth programming.** At best (slot 2) it breaks even. It does nothing in slot 1 (11%). The bot is right to leave it out.
 - **Media loses in every slot**, even against bots that never play it. Slot 3 is its best (24%). This backs up keeping it as a niche action that needs a big flip to pay off, something a fixed-plan bot can't judge.
 - **Bot vs game:** these test one seat against a field of shipped bots, with every other choice left to the bot. A rule of thumb for this bot: Address → Invest or Leverage → Leverage or Develop → Dance.
+
+### 9. Rallies against rivals, and races on the tracks (after the start player and Media changes)
+
+Mirror games of the shipped bot, 300 per player count (`contest` experiment).
+
+**Rallying a rival's hex is common, and more so with more players.** Discs a seat gains per game:
+
+| players | onto an empty hex | taken from a rival | given by polling | rallies that take a rival disc |
+|---|---|---|---|---|
+| 2 | 9.1 | 4.2 | 7.7 | 31% |
+| 3 | 7.7 | 5.3 | 4.0 | 41% |
+| 4 | 6.8 | 5.8 | 2.1 | 46% |
+| 5 | 6.0 | 6.3 | 1.1 | 51% |
+
+- **It's almost all Dance.** Per play, Dance takes 1.26 rival discs and claims 0.67 empty hexes. Develop mostly claims the rondel tile it lands on (0.90 empty, 0.08 rival). Address only rallies when upgraded (0.10). Leverage and Invest never rally. That explains why banning Dance is fatal: it's the only way the bot takes ground from anyone.
+- **It builds through the game:** 0.33 rival discs taken per seat in round 1, then 0.93, 1.13, 1.31 and 1.61 in round 5, as tracks rise and more hexes have discs.
+- **Polling matters at 2 players:** with fewer rivals, a seat is more often the single leader of a tile's issue, so polling hands it nearly as many discs (7.7) as its own rallies onto empty hexes.
+
+**The bots climb high, to 3 and then stop.** A seat's best track ends on 3.5 on average, and 98% of seats end with a track on 3 or more (about 54% on 4). That's far higher than finding 4 measured with Media in the plans. Their six tracks, best to worst, after each round (3 players):
+
+| after | best | 2nd | 3rd | 4th | 5th | worst |
+|---|---|---|---|---|---|---|
+| R1 | 1.7 | 0.9 | 0.3 | 0.0 | −0.3 | −1.1 |
+| R3 | 2.9 | 1.8 | 0.9 | 0.3 | −0.3 | −1.1 |
+| R5 | 3.5 | 2.7 | 1.5 | 0.6 | 0.0 | −0.8 |
+
+At game end the seat-tracks sit on −2/−1/0/1/2/3/4 in 3/10/25/22/**10**/21/10% of cases. The dip at 2 and the bump at 3 are the upgrade pulling tracks up to 3. Each seat goes deep on about two tracks, keeps two near 0 and sinks one (the Invest payment).
+
+**They race on the same track only at 2 players:**
+
+| players | tracks with 2+ seats on 2+ at end | two seats share a favourite track (chance 17%) | track lead changes per game | overtakes per game |
+|---|---|---|---|---|
+| 2 | 23% | **39%** | 5.1 | 6.0 |
+| 3 | 35% | 22% | 6.6 | 12.6 |
+| 4 | 51% | 15% | 8.1 | 21.6 |
+| 5 | 63% | 15% | 8.9 | 32.9 |
+
+- **2 players:** the two seats' best tracks match twice as often as chance. With only one rival, the bot climbs whatever track it needs to out-rank that rival, so the two end up on the same issues.
+- **3+ players:** favourite tracks overlap at about chance, so they don't pick a fight on purpose. Tracks still get crowded, because with more seats there are more seats on 2+ on each track, and overtakes (climbing past a rival on 1+) grow from 6 to 33 a game.
+- **Lead changes are rare:** across all six tracks, a track's single leader changes hands only 5–9 times a game, about once per track. Once a seat leads a track, it usually keeps it.
 
 ## Proposed next tests
 

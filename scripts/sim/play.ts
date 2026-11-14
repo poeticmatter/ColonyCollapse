@@ -3,6 +3,7 @@ import { ACTION_IDS, type ActionId } from '../../src/game/art/actions'
 import { ISSUES, type Issue } from '../../src/game/board/palette'
 import { colonyRules, finalRanking, type GameState, type Move, type Seat } from '../../src/game/rules'
 import { range } from '../../src/game/rules/util'
+import { discChanges, type DiscChange } from './discs'
 import type { Policy } from './policies'
 
 const MAX_MOVES = 20_000
@@ -35,6 +36,16 @@ export interface GameRecord {
   trackAction: Record<Issue, ActionId>
   finalTracks: Record<Issue, number[]>
   boardDiscs: number[]
+  /** Every disc that changed owner, in order. */
+  discChanges: DiscChange[]
+  /** `trackPeak[issue][seat]`: the highest space the seat reached on that track. */
+  trackPeak: Record<Issue, number[]>
+  /** `roundEndTracks[round - 1][issue][seat]`, after polling. */
+  roundEndTracks: Record<Issue, number[]>[]
+  /** How many times each track's leader (a single highest seat, on 0 or above) became someone new. */
+  leadChanges: Record<Issue, number>
+  /** Moves in which a seat climbed from level with or below a rival to above them, where the rival was on 1 or more. */
+  overtakes: number
   startPlayerChanges: number
   moveCount: number
   decisionCounts: Record<string, number>
@@ -52,6 +63,28 @@ function countBoardDiscs(state: GameState): number[] {
   return discs
 }
 
+function copyTracks(state: GameState): Record<Issue, number[]> {
+  return Object.fromEntries(ISSUES.map((issue) => [issue, [...state.track[issue]]])) as Record<Issue, number[]> // keys are exactly ISSUES
+}
+
+/** The single highest seat on a track, if they're on 0 or above; polling gives unclaimed tiles to them. */
+function trackLeader(positions: readonly number[]): Seat | null {
+  const top = Math.max(...positions)
+  const leaders = positions.flatMap((position, seat) => (position === top ? [seat] : []))
+  return top >= 0 && leaders.length === 1 ? leaders[0] : null
+}
+
+function countOvertakes(before: readonly number[], after: readonly number[]): number {
+  let overtakes = 0
+  after.forEach((climber, seat) => {
+    before.forEach((rival, rivalSeat) => {
+      const wasNotAbove = before[seat] <= rival
+      if (rivalSeat !== seat && rival >= 1 && wasNotAbove && climber > after[rivalSeat]) overtakes += 1
+    })
+  })
+  return overtakes
+}
+
 function emptyUpgradeRounds(playerCount: number): Record<ActionId, (number | null)[]> {
   const rounds = {} as Record<ActionId, (number | null)[]> // filled for every action just below
   for (const action of ACTION_IDS) rounds[action] = range(playerCount).map(() => null)
@@ -64,11 +97,31 @@ class GameRecorder {
   readonly leverage: LeverageTake[] = []
   readonly decisionCounts: Record<string, number> = {}
   readonly upgradeRound: Record<ActionId, (number | null)[]>
+  readonly discChanges: DiscChange[] = []
+  readonly trackPeak: Record<Issue, number[]>
+  readonly roundEndTracks: Record<Issue, number[]>[] = []
+  readonly leadChanges = Object.fromEntries(ISSUES.map((issue) => [issue, 0])) as Record<Issue, number> // keys are exactly ISSUES
+  private readonly lastLeader = Object.fromEntries(ISSUES.map((issue) => [issue, null])) as Record<Issue, Seat | null> // keys are exactly ISSUES
+  overtakes = 0
   startPlayerChanges = 0
 
   constructor(start: GameState) {
     this.upgradeRound = emptyUpgradeRounds(start.playerCount)
+    this.trackPeak = copyTracks(start)
     this.noteUpgrades(start)
+  }
+
+  private noteTracks(before: GameState, after: GameState): void {
+    for (const issue of ISSUES) {
+      const positions = after.track[issue]
+      positions.forEach((position, seat) => (this.trackPeak[issue][seat] = Math.max(this.trackPeak[issue][seat], position)))
+      this.overtakes += countOvertakes(before.track[issue], positions)
+      const leader = trackLeader(positions)
+      if (leader !== null && leader !== this.lastLeader[issue]) {
+        if (this.lastLeader[issue] !== null) this.leadChanges[issue] += 1
+        this.lastLeader[issue] = leader
+      }
+    }
   }
 
   noteMove(before: GameState, after: GameState, seat: Seat, move: Move): void {
@@ -81,9 +134,12 @@ class GameRecorder {
       }
     }
     if (after.startPlayer !== before.startPlayer) this.startPlayerChanges += 1
+    this.discChanges.push(...discChanges(before, after))
+    this.noteTracks(before, after)
     const isRoundScored = after.round !== before.round || (after.phase === 'over' && before.phase !== 'over')
     if (isRoundScored) {
       this.roundPoints.push(after.players.map((player, index) => player.victoryPoints - before.players[index].victoryPoints))
+      this.roundEndTracks.push(copyTracks(after))
     }
     this.noteUpgrades(after)
   }
@@ -131,8 +187,13 @@ export function playGame(playerCount: number, seed: number, policies: Policy[]):
     upgradeRound: recorder.upgradeRound,
     setAsideAction: state.setAsideAction,
     trackAction: state.trackAction,
-    finalTracks: Object.fromEntries(ISSUES.map((issue) => [issue, [...state.track[issue]]])) as Record<Issue, number[]>, // keys are exactly ISSUES
+    finalTracks: copyTracks(state),
     boardDiscs: countBoardDiscs(state),
+    discChanges: recorder.discChanges,
+    trackPeak: recorder.trackPeak,
+    roundEndTracks: recorder.roundEndTracks,
+    leadChanges: recorder.leadChanges,
+    overtakes: recorder.overtakes,
     startPlayerChanges: recorder.startPlayerChanges,
     moveCount,
     decisionCounts: recorder.decisionCounts,

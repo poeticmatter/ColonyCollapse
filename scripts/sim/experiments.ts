@@ -2,6 +2,7 @@ import { ACTION_IDS, ACTIONS, type ActionId } from '../../src/game/art/actions'
 import { ISSUES } from '../../src/game/board/palette'
 import { ABILITIES, cardById, type AbilityId } from '../../src/game/data/cards'
 import { banning, heuristic, markerKeeper, placing, random, randomPlanner, type Policy } from './policies'
+import { contest } from './contest'
 import { playGame, positionOf, type GameRecord } from './play'
 import { fixed, heading, marginOfError, mean, percent, table } from './stats'
 
@@ -283,6 +284,7 @@ const EXPERIMENTS: Record<string, (games: number, option?: string) => void> = {
   bans: (games) => actionBans(games, 3),
   marker,
   actions: actionSlots,
+  contest,
 }
 
 const [name = 'baseline', gamesArgument = '300', option] = process.argv.slice(2)
