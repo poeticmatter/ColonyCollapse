@@ -21,6 +21,7 @@ The multiplayer platform (lobby, seats, transports, status screens) is **GameKit
 
 - `src/game/`: the game, Colony Collapse. `index.ts` exports `game: GameModule`.
   - `rules/`: the pure rules engine (`colonyRules`), its selectors, and tests. Resolution runs on a JSON stack of tasks; a task waiting for a choice is a `PendingDecision`, answered by a `decide` move. `rules/testing/` has scenario helpers and a bot that plays whole games.
+  - `bot/`: the computer opponent (`chooseBotMove`, GameKit's `GameModule.bot`): simulates each answer a decision allows and scores the result (`evaluate.ts`, weights in `weights.ts`); plans are scored heuristically (`plan.ts`). Pure and deterministic, and it never reads a rival's hidden plan.
   - `data/`: the 45 seed cards and 30 hex tiles.
   - `board/`: pure board geometry, palette, rondel and track constants.
   - `art/`: SVG pieces ported from the physical prototype's asset project (C:\Codessets\ColonyCollapseAssets).

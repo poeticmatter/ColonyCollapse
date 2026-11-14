@@ -13,7 +13,7 @@ export interface DistrictStanding {
   winner: Seat | null
 }
 
-function pickWinner(counts: readonly number[], printedController: Seat | null): Seat | null {
+export function pickWinner(counts: readonly number[], printedController: Seat | null): Seat | null {
   const most = Math.max(...counts)
   if (most === 0) return null
   const tied = counts.flatMap((count, seat) => (count === most ? [seat] : []))
