@@ -1,10 +1,37 @@
 @import "tailwindcss";
 @import "game-kit/theme.css";
 
-/* GameKit's screens and the example game use the theme's colour tokens (ground,
+/* GameKit's screens and the game use the theme's colour tokens (ground,
    paper, ink, accent…). Override any of them here to restyle the whole game, e.g.:
 
    @theme {
      --color-accent: #0072b2;
    }
 */
+
+/* The board screen: one column on a phone, in this order; board beside the controls on a desktop. */
+.colony-layout {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "header"
+    "action"
+    "board"
+    "players"
+    "rondel"
+    "tracks"
+    "log";
+}
+
+@media (min-width: 1024px) {
+  .colony-layout {
+    grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr);
+    grid-template-areas:
+      "header header"
+      "board action"
+      "board rondel"
+      "board tracks"
+      "players log";
+  }
+}

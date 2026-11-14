@@ -19,15 +19,22 @@ A browser game for 2–5 players taking turns in order, with no backend of its o
 
 The multiplayer platform (lobby, seats, transports, status screens) is **GameKit**'s `game-kit/turns`, a package pinned in `package.json` to a release tag of poeticmatter/GameKit (local copy: `C:\Code\GameKit`).
 
-- `src/game/`: the game. Pure rules (`rules.ts`, tested in `rules.test.ts`), React UI (`Board.tsx`, `SettingsForm.tsx`), seat colours, and `index.ts` exporting `game: GameModule`. The example is Pig.
+- `src/game/`: the game, Colony Collapse. `index.ts` exports `game: GameModule`.
+  - `rules/`: the pure rules engine (`colonyRules`), its selectors, and tests. Resolution runs on a JSON stack of tasks; a task waiting for a choice is a `PendingDecision`, answered by a `decide` move. `rules/testing/` has scenario helpers and a bot that plays whole games.
+  - `data/`: the 45 seed cards and 30 hex tiles.
+  - `board/`: pure board geometry, palette, rondel and track constants.
+  - `art/`: SVG pieces ported from the physical prototype's asset project (C:\Codessets\ColonyCollapseAssets).
+  - `ui/`: the board screen; `ui/decisions/` has one view per decision kind.
+- `docs/digital-rules.md` is the authoritative rules spec for this build (the designer's rulings on top of the v7.1 rules doc). Change it together with the engine.
 - `src/game.config.ts`: `GAME_CONFIG`: the game id, title, tagline, and Supabase settings read from `.env.local`.
-- `src/App.tsx`: renders `<TurnBasedGameApp config={GAME_CONFIG} game={game} />`. GameKit routes on the URL (`?room=CODE[&mode=async]`); hot-seat matches have no URL.
+- `src/App.tsx`: renders `<TurnBasedGameApp config={GAME_CONFIG} game={game} />`. GameKit routes on the URL (`?room=CODE[&mode=async]`); solo playtests have no URL.
 - `src/index.css`: Tailwind, GameKit's theme (`game-kit/theme.css`), and any colour token overrides.
 
 ### Rules contract
 
 - `createInitialState({ settings, playerCount, seed })` and `applyMove(state, move)` must be pure and deterministic. Keep randomness in the game state, seeded from `seed`, and draw with GameKit's `nextIndex` / `nextRandom`, so every client gets the same results.
-- `activePlayer(state)` names the seat whose move the game awaits (null once over). A turn may take several moves; GameKit only applies moves from the active player.
+- `activePlayers(state)` lists the seats whose moves the game accepts: every seat still programming during the simultaneous programming phase, otherwise the one seat on turn (or whoever a decision is waiting for). `activePlayer` is the first of them, null once over. `applyMove(state, move, player)` is told who moved; moves don't name their seat.
+- Plans and Leverage draws are hidden by the board only (they're in the shared state). Always read plans through `visiblePlanSlot`, and draw seat colours and names through `lookOf` (the log stores `{seat:N}` tokens for this reason).
 - `applyMove` throws GameKit's `IllegalMoveError` for a move that breaks the rules; GameKit catches it and leaves the state alone.
 
 ### Seats and transports (in GameKit)
@@ -35,7 +42,7 @@ The multiplayer platform (lobby, seats, transports, status screens) is **GameKit
 - Seats fill in join order; the creator is seat 0. Browsers remember their seat per room; anyone with the link can take back a seat ("That's me") or watch.
 - **Async (Supabase)**: one row per room in `<game-id>_games` (`players`, `player_count`, `state`, `version`), with seats claimed through `<game-id>_claim_seat`. Both are defined in `supabase/migrations/`.
 - **Live (PeerJS)**: the creator hosts and runs the rules; the game ends if the host closes the tab.
-- **Hot seat**: one device; `role` is always the active player and the Board gets `seating: 'hot_seat'`.
+- **Solo playtest**: one tester plays every seat; the seat being played is disguised as seat 0.
 
 ## Rules
 
