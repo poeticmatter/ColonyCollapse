@@ -59,4 +59,16 @@ export const markerKeeper: Policy = (state, seat) => {
   return heuristic(state, seat)
 }
 
-
+/**
+ * The heuristic, but `action` always goes in `slot` (0-based). If the plan has it elsewhere it moves
+ * there and the tiles between shift along; if not, it replaces the tile in that slot.
+ */
+export function placing(action: ActionId, slot: number): Policy {
+  return (state, seat) => {
+    const move = heuristic(state, seat)
+    if (move.type !== 'program') return move
+    if (!move.plan.includes(action)) return { type: 'program', plan: move.plan.map((planned, index) => (index === slot ? action : planned)) }
+    const others = move.plan.filter((planned) => planned !== action)
+    return { type: 'program', plan: [...others.slice(0, slot), action, ...others.slice(slot)] }
+  }
+}

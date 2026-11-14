@@ -1,12 +1,12 @@
-import { ACTION_IDS, ACTIONS } from '../../src/game/art/actions'
+import { ACTION_IDS, ACTIONS, type ActionId } from '../../src/game/art/actions'
 import { ISSUES } from '../../src/game/board/palette'
 import { ABILITIES, cardById, type AbilityId } from '../../src/game/data/cards'
-import { banning, heuristic, markerKeeper, random, randomPlanner, type Policy } from './policies'
+import { banning, heuristic, markerKeeper, placing, random, randomPlanner, type Policy } from './policies'
 import { playGame, positionOf, type GameRecord } from './play'
 import { fixed, heading, marginOfError, mean, percent, table } from './stats'
 
 /**
- * Bot-vs-bot experiments. Run one with `npx vite-node scripts/sim/experiments.ts <name> [games]`.
+ * Bot-vs-bot experiments. Run one with `npm run sim -- <name> [games] [option]` (`actions` takes an action id as its option).
  * No search: every seat is the shipped heuristic bot or a simple variant of it.
  */
 
@@ -232,6 +232,42 @@ function actionBans(games: number, playerCount: number): void {
   console.log(table([`banned action`, `banning seat wins (fair ${fixed(fair)}%)`, 'points vs fair'], rows))
 }
 
+const SLOT_COUNT = 4
+
+function testSeatSummary(playerCount: number, games: number, test: Policy): (string | number)[] {
+  const { records, testWins } = testSeatGames(playerCount, games, test, heuristic)
+  const testPoints = records.map((record, index) => record.victoryPoints[index % playerCount])
+  return [`${percent(testWins, games)} ${marginOfError(testWins, games)}`, fixed(mean(testPoints))]
+}
+
+/** How often the shipped bot programs `action`, and in which slot, in 3 player mirror games. */
+function shippedUsage(records: GameRecord[], action: ActionId): string {
+  const plans = records.flatMap((record) => record.plans.map((entry) => entry.plan))
+  const slots = Array.from({ length: SLOT_COUNT }, (_, slot) => plans.filter((plan) => plan[slot] === action).length)
+  const total = slots.reduce((a, b) => a + b, 0)
+  return `programmed in ${percent(total, plans.length)} of plans (slot 1–4: ${slots.map((count) => percent(count, plans.length)).join(' / ')})`
+}
+
+/** For each action: one seat always programs it in a given slot, or never programs it. */
+function actionSlots(games: number, only?: string): void {
+  const playerCount = 3
+  const actions = only === undefined ? ACTION_IDS : ACTION_IDS.filter((action) => action === only)
+  if (actions.length === 0) throw new Error(`Unknown action "${only}". Try: ${ACTION_IDS.join(', ')}`)
+  const mirror = mirrorGames(playerCount, games)
+  const shippedPoints = mean(mirror.flatMap((record) => record.victoryPoints))
+  console.log(`# Action slots: one seat forces an action into a slot, ${games} ${playerCount}-player games per row. Shipped bot mean VP ${fixed(shippedPoints)}.`)
+  for (const action of actions) {
+    heading(ACTIONS[action].name)
+    console.log(`Shipped bot: ${shippedUsage(mirror, action)}
+`)
+    const variants: [string, Policy][] = Array.from({ length: SLOT_COUNT }, (_, slot) => [`always slot ${slot + 1}`, placing(action, slot)])
+    // The shipped bot already never programs Media, so its "never" row is the shipped bot.
+    if (action !== 'media') variants.push(['never', banning(action)])
+    const rows = variants.map(([name, policy]) => [name, ...testSeatSummary(playerCount, games, policy)])
+    console.log(table(['test seat', `wins (fair ${fixed(100 / playerCount)}%)`, 'mean VP'], rows))
+  }
+}
+
 function marker(games: number): void {
   console.log(`# Start marker: one seat keeps the marker instead of passing it, ${games} games each`)
   const rows = [3, 4].map((count) => {
@@ -241,14 +277,15 @@ function marker(games: number): void {
   console.log(table(['players', 'keeper wins', 'fair'], rows))
 }
 
-const EXPERIMENTS: Record<string, (games: number) => void> = {
+const EXPERIMENTS: Record<string, (games: number, option?: string) => void> = {
   baseline,
   ladder,
   bans: (games) => actionBans(games, 3),
   marker,
+  actions: actionSlots,
 }
 
-const [name = 'baseline', gamesArgument = '300'] = process.argv.slice(2)
+const [name = 'baseline', gamesArgument = '300', option] = process.argv.slice(2)
 const experiment = EXPERIMENTS[name]
 if (!experiment) throw new Error(`Unknown experiment "${name}". Try: ${Object.keys(EXPERIMENTS).join(', ')}`)
-experiment(Number(gamesArgument))
+experiment(Number(gamesArgument), option)

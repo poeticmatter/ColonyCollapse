@@ -2,7 +2,7 @@
 
 About 9,000 games between bots, with no search: every seat is the shipped heuristic bot (`src/game/bot`) or a simple variant of it. The bot looks one or two decisions ahead and plans from fixed per-slot preferences, so these results describe how *this bot* plays the game. Treat them as pointers for playtesting, not proof.
 
-Run them again with `npm run sim -- <experiment> <games>`; experiments are `baseline`, `ladder`, `bans`, `marker` (code in `scripts/sim/`). Findings 2–7 were measured before the start player started passing between rounds. A game takes 0.1–0.3 s. With 400 games, a win rate is good to about ±5 points; with 300, ±5.5.
+Run them again with `npm run sim -- <experiment> <games>`; experiments are `baseline`, `ladder`, `bans`, `marker`, `actions` (optionally `actions 300 dance` for one action) (code in `scripts/sim/`). Findings 2–7 were measured before the start player started passing between rounds. A game takes 0.1–0.3 s. With 400 games, a win rate is good to about ±5 points; with 300, ±5.5.
 
 ## Findings
 
@@ -91,6 +91,33 @@ One seat moves its Media to another slot, keeping its other tiles in order, agai
 ### 7. Keeping the start marker doesn't matter in practice
 
 A seat that never passes the marker (with Deferred Gavel) and never gives it away (with Speaker's Favor) wins 33% with 3 players and 26% with 4, which is fair. The chance comes up too rarely to matter. The bot's habit of always passing it is harmless.
+
+### 8. Every action by slot (after the start player and Media changes)
+
+One test seat always puts a given action in a given slot, or never programs it, against two shipped bots (3 players, 300 games per row, ±4–5.5 points). "Shipped" is how often the bot itself programs the action, and where. The shipped bot's mean is 29.4 VP and 33.3% wins.
+
+How a slot is forced: if the plan already has the action, it moves to that slot and the tiles in between shift along. If not, it **replaces** whatever the bot had there. The bot puts Dance in slot 4 about 55% of the time, so "always slot 4" for any other action often means "lose Dance". Read slot 4 rows for actions other than Dance as partly a Dance ban.
+
+| action | shipped (slot 1 / 2 / 3 / 4) | slot 1 | slot 2 | slot 3 | slot 4 | never |
+|---|---|---|---|---|---|---|
+| Address | 100% (91 / 9 / 0 / 0) | **32%** | 22% | 25% | 17% | 12% |
+| Develop | 100% (0 / 24 / 50 / 27) | **39%** | 36% | 33% | 31% | 29% |
+| Media | 0% | 14% | 18% | **24%** | 5% | (shipped) |
+| Leverage | 68% (0 / 23 / 27 / 19) | 34% | **38%** | 36% | 18% | 17% |
+| Dance | 77% (0 / 0 / 22 / 55) | 18% | 23% | 29% | **46%** | 1% |
+| Intern | 2% (0 / 2 / 0 / 0) | 11% | 31% | 19% | 5% | **33%** |
+| Invest | 53% (9 / 43 / 2 / 0) | 18% | **36%** | 30% | 20% | 26% |
+
+Mean VP follows the same pattern, from 9.1 (never Dance) to 33.4 (Dance always in slot 4).
+
+- **Dance is the strength action.** It gains the most from a high X: 18% in slot 1, 46% in slot 4. A seat that always plays Dance last beats the shipped bot, which only does so 55% of the time. Dropping it is still fatal (1%).
+- **Address wants to go first.** It is best in slot 1, where the bot already plays it, and it's the second most important action: never playing it gives 12%. Going early probably matters because its flip sets up the board before the rallies.
+- **Develop barely matters where it goes.** Every slot, and even never playing it, is within about 5 points of fair. If anything earlier is better (39% in slot 1), which is the opposite of the bot's habit of playing it in slot 3. It's the weakest of the core actions.
+- **Leverage is worth a slot**, anywhere but the last (34–38% in slots 1–3). Never playing it gives 17%.
+- **Invest has one good slot: slot 2** (36%). In slot 1 its X is too small (18%). Without it a seat drops to 26%, so it's worth playing, but only in the right slot.
+- **Intern is never worth programming.** At best (slot 2) it breaks even. It does nothing in slot 1 (11%). The bot is right to leave it out.
+- **Media loses in every slot**, even against bots that never play it. Slot 3 is its best (24%). This backs up keeping it as a niche action that needs a big flip to pay off, something a fixed-plan bot can't judge.
+- **Bot vs game:** these test one seat against a field of shipped bots, with every other choice left to the bot. A rule of thumb for this bot: Address → Invest or Leverage → Leverage or Develop → Dance.
 
 ## Proposed next tests
 
