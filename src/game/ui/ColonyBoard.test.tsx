@@ -170,3 +170,10 @@ describe('game over', () => {
     expect(html).not.toContain('Reveal &amp; resolve')
   })
 })
+
+describe('action help', () => {
+  it('gives each of the viewer’s action tiles a help button while programming', () => {
+    const html = render(newGame(3), 0)
+    expect(html.match(/aria-label="About /g)?.length).toBeGreaterThanOrEqual(7)
+  })
+})

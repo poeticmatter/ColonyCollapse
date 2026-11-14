@@ -4,6 +4,7 @@ import { SLOT_NUMBERS } from '../../rules/constants'
 import { currentTurn, visiblePlanSlot } from '../../rules'
 import type { Seat } from '../../rules'
 import { useBoard } from '../context'
+import { ActionHelp } from '../actionHelp/ActionHelp'
 
 const PLAN_TILE_SIZE_PX = 64
 
@@ -24,7 +25,9 @@ export function PlanSlots({ owner }: { owner: Seat }) {
           <li key={slot} className={`flex flex-col items-center gap-0.5 rounded-lg p-0.5 ${currentSlot === slot ? 'ring-2 ring-accent' : ''}`}>
             <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Slot {slot}</span>
             {action ? (
-              <ActionTile action={action} side={state.players[owner].tiles[action]} size={PLAN_TILE_SIZE_PX} />
+              <ActionHelp action={action} side={state.players[owner].tiles[action]}>
+                <ActionTile action={action} side={state.players[owner].tiles[action]} size={PLAN_TILE_SIZE_PX} />
+              </ActionHelp>
             ) : (
               <div
                 aria-label={hasPlan ? 'Face down' : 'Empty'}

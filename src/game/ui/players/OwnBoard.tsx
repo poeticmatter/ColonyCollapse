@@ -2,6 +2,7 @@ import { ACTION_IDS, ACTIONS } from '../../art/actions'
 import { ActionTile } from '../../art/ActionTile'
 import type { Seat } from '../../rules'
 import { useBoard } from '../context'
+import { ActionHelp } from '../actionHelp/ActionHelp'
 import { SeatLabel } from '../SeatLabel'
 import { OngoingCardRow } from './OngoingCards'
 import { PlanSlots } from './PlanSlots'
@@ -19,7 +20,9 @@ function TileRow({ seat }: { seat: Seat }) {
         const caption = plan === null ? ACTIONS[action].name : slotIndex === -1 ? 'Set aside' : `Slot ${slotIndex + 1}`
         return (
           <li key={action} className={`flex flex-col items-center gap-0.5 ${plan !== null && slotIndex === -1 ? 'opacity-60' : ''}`}>
-            <ActionTile action={action} side={tiles[action]} size={TILE_SIZE_PX} />
+            <ActionHelp action={action} side={tiles[action]}>
+              <ActionTile action={action} side={tiles[action]} size={TILE_SIZE_PX} />
+            </ActionHelp>
             <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">{caption}</span>
           </li>
         )

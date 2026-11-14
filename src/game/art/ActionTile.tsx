@@ -27,14 +27,13 @@ interface ActionTileProps {
   size?: number
 }
 
-/** An action tile: the action's icon and name, framed blue (basic) or brown with a triangle (upgraded). The rules text is the tooltip. */
+/** An action tile: the action's icon and name, framed blue (basic) or brown with a triangle (upgraded). Its rules are shown by the board's ActionHelp. */
 export function ActionTile({ action, side, size = 96 }: ActionTileProps) {
-  const { Icon, name, rules } = ACTIONS[action]
+  const { Icon, name } = ACTIONS[action]
   const frameColor = SIDE_FRAME_COLORS[side]
   const isUpgraded = side === 'upgraded'
   return (
     <div
-      title={`${name}${isUpgraded ? ' (upgraded)' : ''}: ${rules[side]}`}
       className="flex flex-col overflow-hidden select-none"
       style={{
         width: size,

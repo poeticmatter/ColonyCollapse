@@ -5,6 +5,7 @@ import { ActionTile } from '../../art/ActionTile'
 import { SLOT_NUMBERS } from '../../rules/constants'
 import type { Seat } from '../../rules'
 import { useBoard } from '../context'
+import { ActionHelp } from '../actionHelp/ActionHelp'
 import { clearSlot, EMPTY_PLAN_DRAFT, slotOfAction, toggleAction, toPlan } from './plan'
 
 const TILE_SIZE_PX = 72
@@ -29,14 +30,16 @@ export function ProgrammingPanel({ seat }: { seat: Seat }) {
             <li key={slot} className="flex flex-col items-center gap-0.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Slot {slot}</span>
               {action ? (
-                <button
-                  type="button"
-                  onClick={() => setDraft(clearSlot(draft, slot - 1))}
-                  aria-label={`Clear slot ${slot} (${ACTIONS[action].name})`}
-                  className="cursor-pointer rounded-md ring-2 ring-accent hover:opacity-80"
-                >
-                  <ActionTile action={action} side={tiles[action]} size={TILE_SIZE_PX} />
-                </button>
+                <ActionHelp action={action} side={tiles[action]}>
+                  <button
+                    type="button"
+                    onClick={() => setDraft(clearSlot(draft, slot - 1))}
+                    aria-label={`Clear slot ${slot} (${ACTIONS[action].name})`}
+                    className="block cursor-pointer rounded-md ring-2 ring-accent hover:opacity-80"
+                  >
+                    <ActionTile action={action} side={tiles[action]} size={TILE_SIZE_PX} />
+                  </button>
+                </ActionHelp>
               ) : (
                 <span
                   className="flex items-center justify-center rounded-md border-2 border-dashed border-rule text-ink-faint"
@@ -59,20 +62,22 @@ export function ProgrammingPanel({ seat }: { seat: Seat }) {
             const placedAt = slotOfAction(draft, action)
             const isPlaced = placedAt !== -1
             return (
-              <li key={action} className="relative">
-                <button
-                  type="button"
-                  aria-pressed={isPlaced}
-                  onClick={() => setDraft(toggleAction(draft, action))}
-                  className={`block cursor-pointer rounded-md transition ${isPlaced ? 'opacity-40' : 'hover:-translate-y-0.5 hover:shadow-md'}`}
-                >
-                  <ActionTile action={action} side={tiles[action]} size={TILE_SIZE_PX} />
-                </button>
-                {isPlaced && (
-                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-2xl font-black text-ink">
-                    {placedAt + 1}
-                  </span>
-                )}
+              <li key={action}>
+                <ActionHelp action={action} side={tiles[action]}>
+                  <button
+                    type="button"
+                    aria-pressed={isPlaced}
+                    onClick={() => setDraft(toggleAction(draft, action))}
+                    className={`block cursor-pointer rounded-md transition ${isPlaced ? 'opacity-40' : 'hover:-translate-y-0.5 hover:shadow-md'}`}
+                  >
+                    <ActionTile action={action} side={tiles[action]} size={TILE_SIZE_PX} />
+                  </button>
+                  {isPlaced && (
+                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-2xl font-black text-ink">
+                      {placedAt + 1}
+                    </span>
+                  )}
+                </ActionHelp>
               </li>
             )
           })}

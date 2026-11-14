@@ -6,6 +6,7 @@ import { formatTrackSpace } from '../../board/track'
 import type { Seat } from '../../rules'
 import type { PendingOf } from '../../rules/tasks'
 import { useBoard } from '../context'
+import { ActionHelp } from '../actionHelp/ActionHelp'
 import { SeatLabel } from '../SeatLabel'
 import { DECISION_LABELS } from './labels'
 import { ButtonRow, ChoiceButton, ConfirmButton, DecisionFrame, DeclineButton, IssueLabel, useSendDecision } from './parts'
@@ -64,14 +65,16 @@ function ActionChoice({ title, hint, options, verb, onChoose }: ActionChoiceProp
       <ul className="flex flex-wrap gap-2">
         {options.map((action) => (
           <li key={action}>
-            <button
-              type="button"
-              onClick={() => onChoose(action)}
-              aria-label={`${verb} ${ACTIONS[action].name}`}
-              className="block cursor-pointer rounded-md transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <ActionTile action={action} side={tiles?.[action] ?? 'basic'} size={ACTION_TILE_SIZE_PX} />
-            </button>
+            <ActionHelp action={action} side={tiles?.[action] ?? 'basic'}>
+              <button
+                type="button"
+                onClick={() => onChoose(action)}
+                aria-label={`${verb} ${ACTIONS[action].name}`}
+                className="block cursor-pointer rounded-md transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <ActionTile action={action} side={tiles?.[action] ?? 'basic'} size={ACTION_TILE_SIZE_PX} />
+              </button>
+            </ActionHelp>
           </li>
         ))}
       </ul>

@@ -19,21 +19,22 @@ export interface ActionInfo {
   id: ActionId
   name: string
   Icon: LucideIcon
-  /** Rules text per side, from Rules v7.1. X is the strength of the slot the action resolves in (1-4). */
+  /** Rules text per side, as this build plays it. X is the strength of the slot the action resolves in (1-4). */
   rules: Readonly<Record<ActionSide, string>>
 }
 
-/** The seven actions, in the rules' order. The rules document wins over the older prototype assets. */
+/**
+ * The seven actions, in the rules' order. The rules text is what this build does
+ * (docs/digital-rules.md), which wins over the rules doc and the older prototype assets.
+ */
 export const ACTIONS: Readonly<Record<ActionId, ActionInfo>> = {
   address: {
     id: 'address',
     name: 'Address',
     Icon: Megaphone,
     rules: {
-      basic:
-        "Move the rondel pawn up to X spaces clockwise. Go up 1 space on that tile's issue track, then flip the tile.",
-      upgraded:
-        "Move the rondel pawn up to X spaces clockwise. Go up 1 space on that tile's issue track, flip the tile, then rally it.",
+      basic: "Move the rondel pawn 1 to X spaces clockwise. Go up 1 on that tile's issue, then flip the tile.",
+      upgraded: "Move the rondel pawn 1 to X spaces clockwise. Go up 1 on that tile's issue, flip the tile, then rally it.",
     },
   },
   develop: {
@@ -41,9 +42,9 @@ export const ACTIONS: Readonly<Record<ActionId, ActionInfo>> = {
     name: 'Develop',
     Icon: Hammer,
     rules: {
-      basic: 'Move the rondel pawn up to X spaces clockwise. Rally that tile.',
+      basic: 'Move the rondel pawn 1 to X spaces clockwise. Rally the tile it stops on.',
       upgraded:
-        'Move the rondel pawn up to X spaces clockwise. Rally that tile, and also rally one tile along the way (not the one you started on).',
+        'Move the rondel pawn 1 to X spaces clockwise. Rally the tile it stops on, and you may also rally one tile it passed on the way.',
     },
   },
   media: {
@@ -51,9 +52,8 @@ export const ACTIONS: Readonly<Record<ActionId, ActionInfo>> = {
     name: 'Media',
     Icon: Newspaper,
     rules: {
-      basic: 'Flip any 1 tile in the rondel. It cannot be flipped by a Media action again this turn.',
-      upgraded:
-        'Flip any number of tiles in the rondel. They cannot be flipped by a Media action again this turn.',
+      basic: 'You may flip 1 rondel tile. No Media can flip it again this slot.',
+      upgraded: 'Flip any number of rondel tiles. No Media can flip them again this slot.',
     },
   },
   leverage: {
@@ -62,9 +62,8 @@ export const ACTIONS: Readonly<Record<ActionId, ActionInfo>> = {
     Icon: Handshake,
     rules: {
       basic:
-        'Draw X cards and choose one. Resolve any immediate effect on it and place it in front of you, or go up one of its issue tracks.',
-      upgraded:
-        'Draw X cards and choose one. Resolve any immediate effect on it and place it in front of you, or go up one of its issue tracks; you may do both.',
+        'Draw X cards and keep 1. Either play its effect and place it in front of you, or go up 1 on one of its 2 issues.',
+      upgraded: 'Draw X cards and keep 1. Play its effect and place it in front of you, then you may also go up 1 on one of its 2 issues.',
     },
   },
   dance: {
@@ -73,9 +72,9 @@ export const ACTIONS: Readonly<Record<ActionId, ActionInfo>> = {
     Icon: Radio,
     rules: {
       basic:
-        'Move your pawn X spaces on the board, whether or not there is a tile there. Then rally the tile you land on and all adjacent tiles.',
+        "Move your pawn 1 to X hexes, never into or through another pawn's hex. Then rally the hex it lands on and every hex next to it.",
       upgraded:
-        'Move your pawn X spaces on the board. Then rally the tile you land on and all adjacent tiles; you need only be tied on the issue track to gain control.',
+        "Move your pawn 1 to X hexes, never into or through another pawn's hex. Then rally the hex it lands on and every hex next to it; a tie with the disc owner is enough.",
     },
   },
   intern: {
@@ -83,8 +82,8 @@ export const ACTIONS: Readonly<Record<ActionId, ActionInfo>> = {
     name: 'Intern',
     Icon: GraduationCap,
     rules: {
-      basic: 'Resolve the action tile in the previous slot at strength 1, standard version.',
-      upgraded: 'Resolve the action tile in the previous slot at strength 1, upgraded version.',
+      basic: 'Resolve the tile in your previous slot again at strength 1, on its standard side. Does nothing in slot 1.',
+      upgraded: 'Resolve the tile in your previous slot again at strength 1, on its upgraded side. Does nothing in slot 1.',
     },
   },
   invest: {
@@ -92,10 +91,8 @@ export const ACTIONS: Readonly<Record<ActionId, ActionInfo>> = {
     name: 'Invest',
     Icon: TrendingUp,
     rules: {
-      basic:
-        'Choose an issue track. Go down up to X spaces on it to go up that many spaces on an adjacent track.',
-      upgraded:
-        'Choose an issue track. Go down up to X spaces on it to go up that many spaces on any other track.',
+      basic: 'Go down 0 to X on one issue, then up the same amount on a neighbouring issue (Clay and Mauve are not neighbours).',
+      upgraded: 'Go down 0 to X on one issue, then up the same amount on any other issue.',
     },
   },
 }
