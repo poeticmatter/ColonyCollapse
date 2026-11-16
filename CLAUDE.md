@@ -18,7 +18,7 @@ npm run init-game -- <repo-name> <game-id> "<Title>"   # one-time rename of a fr
 
 A browser game for 2–5 players taking turns in order, with no backend of its own. It is part of the game lab (poeticmatter/game-lab); each game lives in its own repo created from poeticmatter/game-template-turns. (Two-player games where both choose at the same time start from poeticmatter/game-template instead.)
 
-The multiplayer platform (lobby, seats, transports, status screens) is **GameKit**'s `game-kit/turns`, a package pinned in `package.json` to a release tag of poeticmatter/GameKit (local copy: `C:\Code\GameKit`).
+The multiplayer platform (lobby, seats, transports, status screens) is **GameKit**'s `game-kit/turns`, a package pinned in `package.json` to a release tag of poeticmatter/GameKit (local copy: `C:\Code\digital-board-games\GameKit`).
 
 - `src/game/`: the game, Colony Collapse. `index.ts` exports `game: GameModule`.
   - `rules/`: the pure rules engine (`colonyRules`), its selectors, and tests. On this branch players spend action points on their own turn; `actions.ts` carries out each paid action, `flow.ts` turns the dial and ends turns and rounds, and `moves.ts` lists the legal moves. `rules/testing/` has scenario helpers and a random player that plays whole games.
