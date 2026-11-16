@@ -25,7 +25,7 @@ The multiplayer platform (lobby, seats, transports, status screens) is **GameKit
   - `bot/`: the computer opponent (`chooseBotMove`, GameKit's `GameModule.bot`): a beam search over the whole turn's actions (`search.ts`) that scores where each finished turn leaves the board (`evaluate.ts`, weights in `weights.ts`). Pure and deterministic; it never peeks at the bag.
   - `data/`: the 30 hex tiles.
   - `board/`: pure board geometry, palette, rondel and track constants.
-  - `art/`: SVG pieces ported from the physical prototype's asset project (C:\Codessets\ColonyCollapseAssets).
+  - `art/`: SVG pieces ported from the physical prototype's asset project (C:\Code\assets\ColonyCollapseAssets).
   - `ui/`: the board screen; `ui/turn/` has the controls for the player on turn.
 - `docs/digital-rules.md` is the authoritative rules spec for this build (the designer's rulings on top of the v7.1 rules doc). Change it together with the engine.
 - `src/game.config.ts`: `GAME_CONFIG`: the game id, title, tagline, and Supabase settings read from `.env.local`.
