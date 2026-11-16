@@ -4,6 +4,9 @@ What changed and why, newest first. **Game design** is the game itself: rules, c
 
 ## Game design
 
+### 2026-11-16: Action points replace programming
+On the `explore/action-tension` branch. The actions weren't in tension: in slot 4 they mostly offered more choice or reach, not more effect, so the pull towards slot 4 was just about playing late, and programming left little to plan. Action selection is gone. On your turn you spend 5 action points: turn the dial, move your pawn, rally or address the dial tile, or shift between neighbouring tracks for 1 each, or rally around your pawn for 3. The dial turns after every turn, and the round ends when it passes the mark between slot 6 and slot 1, so turning the dial yourself hurries the scoring along. Seed cards, action tiles and upgrades are gone. Some calls are the build's own, still to check in play: a rally that would change nothing can't be bought, a track at +4 can't go up in a shift, and the last tiebreak counts from whoever started round 5.
+
 ### 2026-11-14: Bot simulations of the rules
 About 9,000 bot-vs-bot games, measured several ways. Nothing changed in the rules except the start player rule below. What they found, for this bot's style of play:
 - **Dance is by far the strongest action.** Never playing it wins 1% of games, and it is the only action that takes much ground from other players.
@@ -30,6 +33,9 @@ The designer's Rules v7.1, with these calls on the open questions:
 The full list is in `docs/build-questions.md` and `docs/digital-rules.md`.
 
 ## Game development
+
+### 2026-11-16: The board, bot and simulations follow action points
+On the `explore/action-tension` branch. A turn panel lists every action with its cost and greys out what isn't possible now. You move your pawn by clicking a highlighted hex, and the board outlines what rallying around it would take. The rondel shows the gold mark, and the header shows how many turns are left before it. The bot now plans its whole turn by searching sequences of actions. `npm run sim` plays bot games on the new rules and reports seat fairness, round length and which actions get bought. Games saved under the old rules can't be played on this build.
 
 ### 2026-11-16: A plain-language rules document and this log
 `docs/rules.md` describes the game as it plays now, and this log records changes in two parts. Both are kept up to date with every change.
