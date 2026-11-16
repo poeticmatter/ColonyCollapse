@@ -1,18 +1,14 @@
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { getPlayerColor } from '../board/palette'
-import { ACTION_IDS } from './actions'
-import { ActionTile } from './ActionTile'
 import { BoardView, BOARD_DISC_SIZE } from './BoardView'
 import { Centered } from './Centered'
-import { CardFace } from './CardFace'
 import { HexTileFace } from './HexTileFace'
 import { IssueTrack, getMarkerOffsets } from './IssueTrack'
 import { PlayerDisc } from './PlayerDisc'
 import { PlayerPawn } from './PlayerPawn'
 import { RondelPawn } from './RondelPawn'
 import { RondelView, RONDEL_TILE_SIZE } from './RondelView'
-import { StartPlayerMarker } from './StartPlayerMarker'
 
 describe('BoardView', () => {
   it('renders the bare board', () => {
@@ -54,6 +50,7 @@ describe('RondelView', () => {
         />,
       )
       expect(html).toContain('Tile rondel')
+      expect(html).toContain('the round ends')
     }
   })
 })
@@ -85,18 +82,13 @@ describe('IssueTrack', () => {
 })
 
 describe('pieces', () => {
-  it('renders every piece and action tile', () => {
+  it('renders every piece', () => {
     const html = renderToString(
       <>
         <PlayerPawn color={getPlayerColor(4)} />
         <RondelPawn />
-        <StartPlayerMarker />
-        <CardFace title="Comb Overturn" type="Immediate" effect="DANCE: move 2." colors={['Clay', 'Sage']} />
-        {ACTION_IDS.map((action) => (
-          <ActionTile key={action} action={action} side="upgraded" />
-        ))}
       </>,
     )
-    expect(html).toContain('Comb Overturn')
+    expect(html).toContain('<svg')
   })
 })

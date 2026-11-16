@@ -31,11 +31,3 @@ export function splitLogText(text: string): LogTextPart[] {
   if (cursor < text.length) parts.push({ kind: 'text', text: text.slice(cursor) })
   return parts
 }
-
-export function titleCase(word: string): string {
-  return word.charAt(0).toUpperCase() + word.slice(1)
-}
-
-export function hasDuplicates(values: readonly unknown[]): boolean {
-  return new Set(values).size !== values.length
-}

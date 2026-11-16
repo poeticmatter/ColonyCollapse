@@ -25,7 +25,7 @@ export function GameOverPanel() {
         ))}
       </ol>
       <p className="mt-2 text-xs text-ink-soft">
-        {note ?? 'Most victory points wins.'} Ties are broken by control discs on the board, then clockwise order from the final start player.
+        {note ?? 'Most victory points wins.'} Ties are broken by control discs on the board, then clockwise order from whoever started round 5.
       </p>
     </Panel>
   )

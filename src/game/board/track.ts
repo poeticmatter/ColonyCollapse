@@ -4,9 +4,6 @@ export const TRACK_MIN = -2
 export const TRACK_MAX = 4
 export const TRACK_START = 0
 
-/** Reaching this space upgrades one of the player's action tiles. */
-export const TRACK_UPGRADE_SPACE = 3
-
 /** Lowest to highest. */
 export const TRACK_SPACES: readonly number[] = Array.from(
   { length: TRACK_MAX - TRACK_MIN + 1 },

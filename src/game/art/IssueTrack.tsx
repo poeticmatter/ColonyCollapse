@@ -1,8 +1,4 @@
-import { Triangle, type LucideIcon } from 'lucide-react'
 import {
-  GOLD_DEEP,
-  GOLD_FILL,
-  GOLD_INK,
   ISSUE_DEEP,
   ISSUE_FILL,
   ISSUE_INK,
@@ -13,7 +9,6 @@ import {
 import {
   TRACK_SPACES,
   TRACK_START,
-  TRACK_UPGRADE_SPACE,
   clampToTrack,
   formatTrackSpace,
   isRedZoneSpace,
@@ -41,7 +36,6 @@ const RED_ZONE_TINT_OPACITY = 0.35
 const RED_RULE_WIDTH = 4
 const NUMERAL_COLOR = '#FBF3E4'
 const HEADER_ICON_SIZE = 36
-const UPGRADE_ICON_SIZE = 14
 const DEFAULT_CELL_WIDTH_PX = 40
 
 interface Offset {
@@ -71,33 +65,16 @@ function getSpaceFill(issue: Issue, space: number): string {
 interface SpaceBadgeProps {
   issue: Issue
   space: number
-  upgradeIcon?: LucideIcon
 }
 
-/** The small badge in a space's label band: the bee at the start, the upgrade spot. */
-function SpaceBadge({ issue, space, upgradeIcon: UpgradeIcon }: SpaceBadgeProps) {
-  if (space === TRACK_UPGRADE_SPACE) {
-    return (
-      <g>
-        <circle r={BADGE_RADIUS} fill={GOLD_FILL} stroke={GOLD_DEEP} strokeWidth="1.5" />
-        <g transform={`translate(${-UPGRADE_ICON_SIZE / 2}, ${-UPGRADE_ICON_SIZE / 2})`}>
-          {UpgradeIcon ? (
-            <UpgradeIcon size={UPGRADE_ICON_SIZE} color={GOLD_INK} strokeWidth={2.4} aria-hidden />
-          ) : (
-            <Triangle size={UPGRADE_ICON_SIZE} fill={GOLD_INK} color={GOLD_INK} strokeWidth={0} aria-hidden />
-          )}
-        </g>
-      </g>
-    )
-  }
-  if (space === TRACK_START) {
-    return (
-      <g transform={`translate(${-BADGE_RADIUS}, ${-BADGE_RADIUS})`}>
-        <BeeMark size={BADGE_RADIUS * 2} bodyColor={ISSUE_INK[issue]} stripeColor={getSpaceFill(issue, space)} />
-      </g>
-    )
-  }
-  return null
+/** The small badge in a space's label band: the bee marks the start. */
+function SpaceBadge({ issue, space }: SpaceBadgeProps) {
+  if (space !== TRACK_START) return null
+  return (
+    <g transform={`translate(${-BADGE_RADIUS}, ${-BADGE_RADIUS})`}>
+      <BeeMark size={BADGE_RADIUS * 2} bodyColor={ISSUE_INK[issue]} stripeColor={getSpaceFill(issue, space)} />
+    </g>
+  )
 }
 
 interface TrackSpaceProps extends SpaceBadgeProps {
@@ -106,7 +83,7 @@ interface TrackSpaceProps extends SpaceBadgeProps {
   colorOf: (seat: number) => PlayerColor
 }
 
-function TrackSpace({ issue, space, upgradeIcon, origin, occupants, colorOf }: TrackSpaceProps) {
+function TrackSpace({ issue, space, origin, occupants, colorOf }: TrackSpaceProps) {
   const markerOffsets = getMarkerOffsets(occupants.length)
   const markerAreaCenter = { x: CELL_WIDTH / 2, y: BAND_HEIGHT + (CELL_HEIGHT - BAND_HEIGHT) / 2 }
   return (
@@ -134,7 +111,7 @@ function TrackSpace({ issue, space, upgradeIcon, origin, occupants, colorOf }: T
         {formatTrackSpace(space)}
       </text>
       <g transform={`translate(${CELL_WIDTH - BADGE_INSET}, ${BAND_HEIGHT / 2})`}>
-        <SpaceBadge issue={issue} space={space} upgradeIcon={upgradeIcon} />
+        <SpaceBadge issue={issue} space={space} />
       </g>
       {occupants.map(({ seat }, index) => {
         const offset = markerOffsets[index] ?? { x: 0, y: 0 }
@@ -176,8 +153,6 @@ interface IssueTrackProps {
   positions: readonly TrackPosition[]
   colorOf: (seat: number) => PlayerColor
   orientation?: TrackOrientation
-  /** The icon of the action tile that the +3 spot upgrades; a plain triangle when omitted. */
-  upgradeIcon?: LucideIcon
   /** Rendered width of one space in pixels. */
   cellWidth?: number
 }
@@ -191,7 +166,6 @@ export function IssueTrack({
   positions,
   colorOf,
   orientation = 'horizontal',
-  upgradeIcon,
   cellWidth = DEFAULT_CELL_WIDTH_PX,
 }: IssueTrackProps) {
   const isHorizontal = orientation === 'horizontal'
@@ -233,7 +207,6 @@ export function IssueTrack({
           key={space}
           issue={issue}
           space={space}
-          upgradeIcon={upgradeIcon}
           origin={originOfCell(index + 1)}
           occupants={occupantsBySpace.get(space) ?? []}
           colorOf={colorOf}

@@ -32,7 +32,7 @@ describe('final ranking', () => {
   it('explains a tie that only seat order can break', () => {
     const state = edit(newGame(3), (draft) => {
       for (const player of draft.players) player.victoryPoints = 5
-      draft.startPlayer = 1
+      draft.roundStarter = 1
     })
     expect(tiebreakNote(rankingRows(state), nameOf)).toContain('Bo wins by sitting earlier')
   })

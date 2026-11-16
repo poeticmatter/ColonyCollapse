@@ -29,7 +29,7 @@ function CellOutline({ dash }: { dash?: string }) {
   )
 }
 
-/** The hex board with tiles, discs, pawns, district standings and whatever the active decision highlights. */
+/** The hex board with tiles, discs, pawns, district standings and what the turn controls highlight. */
 export function BoardPanel() {
   const { state, colorOf } = useBoard()
   const selection = useSpatialSelection()

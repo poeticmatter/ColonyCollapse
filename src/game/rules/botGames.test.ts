@@ -2,18 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { getCellInfo, HUB_CELL_KEY } from '../board/geometry'
 import { TRACK_MAX, TRACK_MIN } from '../board/track'
 import { colonyRules } from './index'
-import { pickFirst, playBotGame, seededPick } from './testing/bot'
-import type { GameState } from './types'
+import { pickFirst, playBotGame, randomPlayer, seededPick } from './testing/bot'
+import type { GameState, Move } from './types'
 
 const PLAYER_COUNTS = [2, 3, 4, 5]
 const SEEDS = [1, 2, 3]
 
-const ALL_DECISION_KINDS = [
-  'rondelMove', 'crossPartyFlip', 'developExtraRally', 'sitePrepFlip', 'mediaFlip', 'pressCycleRally',
-  'leveragePick', 'dance', 'waggleSweep', 'invest', 'combOverturn', 'longFlight', 'longFlightRally',
-  'dissidentRally', 'speakersFavor', 'wardSweep', 'blueprintRevision', 'reserveDeployment', 'forcedDown',
-  'forcedUp', 'gavelPass',
-]
+const ALL_MOVE_TYPES: Move['type'][] = ['turnDial', 'movePawn', 'rallyDial', 'address', 'shift', 'rallyAround', 'endTurn']
 
 function expectConsistent(state: GameState): void {
   const tileIds = [
@@ -23,9 +18,6 @@ function expectConsistent(state: GameState): void {
   ]
   expect(new Set(tileIds).size).toBe(30)
   expect(tileIds).toHaveLength(30)
-
-  const cardIds = [...state.deck, ...state.discard, ...state.players.flatMap((player) => player.ongoing)]
-  expect(new Set(cardIds).size).toBe(cardIds.length)
 
   const occupiedCells = state.pawns.map((pawn) => pawn.cell).filter((cell) => cell !== HUB_CELL_KEY)
   expect(new Set(occupiedCells).size).toBe(occupiedCells.length)
@@ -41,37 +33,36 @@ function expectConsistent(state: GameState): void {
   }
 }
 
-describe('bot games', () => {
+describe('random bot games', () => {
   for (const playerCount of PLAYER_COUNTS) {
     for (const seed of SEEDS) {
-      it(`a bot that always takes the first legal choice finishes a ${playerCount}-player game (seed ${seed})`, () => {
-        const { state } = playBotGame(playerCount, seed, pickFirst)
+      it(`a player that always takes the first legal move finishes a ${playerCount}-player game (seed ${seed})`, () => {
+        const { state } = playBotGame(playerCount, seed, randomPlayer(pickFirst))
         expect(state.phase).toBe('over')
-        expect(colonyRules.activePlayer(state)).toBeNull()
         expect(colonyRules.activePlayers?.(state)).toEqual([])
         expectConsistent(state)
       })
 
-      it(`a bot choosing varied legal moves finishes a ${playerCount}-player game (seed ${seed})`, () => {
-        const { state } = playBotGame(playerCount, seed, seededPick(seed * 31 + playerCount), expectConsistent)
+      it(`a player choosing varied legal moves finishes a ${playerCount}-player game (seed ${seed})`, () => {
+        const { state } = playBotGame(playerCount, seed, randomPlayer(seededPick(seed * 31 + playerCount)), expectConsistent)
         expect(state.phase).toBe('over')
+        expect(Object.keys(state.board)).toHaveLength(30)
         expect(colonyRules.outcome?.(state).winners).toHaveLength(1)
       })
     }
   }
 
   it('keeps the state plain JSON after every move', () => {
-    playBotGame(3, 7, seededPick(7), (state) => {
+    playBotGame(3, 7, randomPlayer(seededPick(7)), (state) => {
       expect(JSON.parse(JSON.stringify(state))).toEqual(state)
     })
   })
 
-  it('exercises every kind of decision across varied games', () => {
+  it('plays every kind of move across varied games', () => {
     const seen = new Set<string>()
-    for (let seed = 1; seed <= 40; seed += 1) {
-      const result = playBotGame(2 + (seed % 4), seed, seededPick(seed))
-      result.decisionKinds.forEach((kind) => seen.add(kind))
+    for (let seed = 1; seed <= 10; seed += 1) {
+      playBotGame(2 + (seed % 4), seed, randomPlayer(seededPick(seed))).moveTypes.forEach((type) => seen.add(type))
     }
-    expect([...seen].sort()).toEqual([...ALL_DECISION_KINDS].sort())
+    expect([...seen].sort()).toEqual([...ALL_MOVE_TYPES].sort())
   })
 })

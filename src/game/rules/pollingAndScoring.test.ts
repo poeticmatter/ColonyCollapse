@@ -3,8 +3,8 @@ import { getDistrict } from '../board/geometry'
 import { ISSUES } from '../board/palette'
 import { colonyRules, districtStandings, finalRanking } from './index'
 import { runPolling } from './polling'
-import { rallySite, type RallyOptions } from './rally'
-import { decide, edit, reveal, scenario } from './testing/scenario'
+import { rallySite } from './rally'
+import { edit, play, scenario } from './testing/scenario'
 import type { GameState, HexTile, Seat, SiteRef } from './types'
 
 function tileOf(disc: Seat | null = null, id = 99): HexTile {
@@ -175,11 +175,11 @@ describe('final ranking', () => {
     expect(finalRanking(state)).toEqual([2, 1, 0])
   })
 
-  it('breaks a remaining tie in favour of the earliest seat clockwise from the final start player', () => {
+  it('breaks a remaining tie in favour of the earliest seat clockwise from who started the round', () => {
     const state = scenario({
+      seat: 1,
       setup: (draft) => {
         draft.players.forEach((player) => { player.victoryPoints = 5 })
-        draft.startPlayer = 1
       },
     })
     expect(finalRanking(state)).toEqual([1, 2, 0])
@@ -188,7 +188,6 @@ describe('final ranking', () => {
   it('reports the winner and scores as the game outcome', () => {
     const state = edit(scenario(), (draft) => {
       draft.phase = 'over'
-      draft.resolution = null
       draft.players[2].victoryPoints = 9
     })
     expect(colonyRules.outcome?.(state)).toEqual({ winners: [2], scores: [0, 0, 9] })
@@ -197,12 +196,11 @@ describe('final ranking', () => {
 
 describe('rally', () => {
   const site: SiteRef = { type: 'rondel', slot: 0 }
-  const plain: RallyOptions = { canTie: false, countsAsFour: false }
 
-  function discAfterRally(seat: Seat, setup: (draft: GameState) => void, options: RallyOptions = plain): Seat | null {
+  function discAfterRally(seat: Seat, setup: (draft: GameState) => void): Seat | null {
     const state = edit(scenario(), (draft) => {
       setup(draft)
-      rallySite(draft, seat, site, options)
+      rallySite(draft, seat, site)
     })
     return state.rondel[0]?.disc ?? null
   }
@@ -231,18 +229,6 @@ describe('rally', () => {
     expect(disc).toBe(1)
   })
 
-  it('replaces a disc when tied if ties are enough', () => {
-    const disc = discAfterRally(
-      0,
-      (draft) => {
-        if (draft.rondel[0]) draft.rondel[0].disc = 1
-        draft.track.Clay = [1, 1, 0]
-      },
-      { canTie: true, countsAsFour: false },
-    )
-    expect(disc).toBe(0)
-  })
-
   it('leaves the player own disc alone', () => {
     const disc = discAfterRally(0, (draft) => {
       if (draft.rondel[0]) draft.rondel[0].disc = 0
@@ -257,19 +243,17 @@ describe('rally', () => {
       draft.board[cell].faces = ['Clay', 'Mauve']
       draft.track.Clay = [0, 3, 0]
       draft.pawns[0] = { id: 0, seat: 0, cell, hasLeftHub: true }
-      rallySite(draft, 0, { type: 'cell', cell }, plain)
+      rallySite(draft, 0, { type: 'cell', cell })
     })
     expect(state.board[cell].disc).toBe(1)
   })
 })
 
 describe('round end', () => {
-  it('plays on after slot 4 of round 1 with a fresh rondel', () => {
-    const plan = ['address', 'develop', 'invest', 'intern'] as const
-    let state = scenario({ playerCount: 2, slot: 4, plans: { 0: [...plan], 1: [...plan] } })
-    state = decide(reveal(state), { kind: 'invest', transfer: null })
-    state = decide(reveal(state), { kind: 'invest', transfer: null })
+  it('polls and refills the rondel when the dial passes the mark', () => {
+    const state = play(scenario({ playerCount: 2, setup: (draft) => { draft.dial = 5 } }), { type: 'endTurn' })
     expect(state.round).toBe(2)
     expect(state.bag).toHaveLength(18)
+    expect(Object.keys(state.board)).toHaveLength(6)
   })
 })

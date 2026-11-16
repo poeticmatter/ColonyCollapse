@@ -18,7 +18,6 @@ export function LogPanel() {
             <li key={`${state.log.length - index}`} className={index === 0 ? 'font-semibold' : 'text-ink-soft'}>
               <span className="mr-1.5 text-xs text-ink-faint">
                 R{entry.round}
-                {entry.slot ? `.${entry.slot}` : ''}
               </span>
               <LogText text={entry.text} />
             </li>

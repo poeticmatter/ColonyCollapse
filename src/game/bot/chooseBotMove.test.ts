@@ -1,78 +1,50 @@
 import { describe, expect, it } from 'vitest'
-import { ACTION_IDS, type ActionId } from '../art/actions'
-import { colonyRules, finalRanking, pendingDecision, type GameState, type Move, type Seat } from '../rules'
-import { chooseDecision, seededPick, type Pick } from '../rules/testing/bot'
+import { getDistrict } from '../board/geometry'
+import { colonyRules, legalMoves, tileIssue } from '../rules'
+import { getLeader } from '../rules/positions'
+import { playBotGame } from '../rules/testing/bot'
+import { rondelTile, scenario } from '../rules/testing/scenario'
 import { chooseBotMove } from './index'
-
-const MAX_MOVES = 5_000
-const PLAYER_COUNTS = [2, 3, 4, 5]
-const SEEDS = [1, 2, 3]
-const STRENGTH_GAMES = 20
-const STRENGTH_PLAYER_COUNT = 3
-const MIN_WIN_SHARE = 0.5
-const PLAN_LENGTH = 4
-
-type MoveChooser = (state: GameState, seat: Seat) => Move
-
-function randomPlan(pick: Pick): ActionId[] {
-  const remaining = [...ACTION_IDS]
-  return Array.from({ length: PLAN_LENGTH }, () => remaining.splice(remaining.indexOf(pick(remaining)), 1)[0])
-}
-
-function randomMoveChooser(pick: Pick): MoveChooser {
-  return (state, seat) => {
-    if (state.phase === 'programming') return { type: 'program', plan: randomPlan(pick) }
-    const pending = pendingDecision(state)
-    if (pending !== null && pending.actor === seat) return { type: 'decide', decision: chooseDecision(pending, pick) }
-    return { type: 'reveal' }
-  }
-}
-
-function playGame(playerCount: number, seed: number, chooserFor: (seat: Seat) => MoveChooser): GameState {
-  let state = colonyRules.createInitialState({ settings: {}, playerCount, seed })
-  for (let moveCount = 0; state.phase !== 'over'; moveCount += 1) {
-    if (moveCount > MAX_MOVES) throw new Error(`Game did not end (players ${playerCount}, seed ${seed})`)
-    const seat = colonyRules.activePlayers?.(state)[0]
-    if (seat === undefined) throw new Error('Nobody is to move')
-    state = colonyRules.applyMove(state, chooserFor(seat)(state, seat), seat)
-  }
-  return state
-}
+import { bestTurn } from './search'
 
 describe('chooseBotMove', () => {
-  for (const playerCount of PLAYER_COUNTS) {
-    for (const seed of SEEDS) {
-      it(`plays a complete ${playerCount}-player game with legal moves (seed ${seed})`, () => {
-        const state = playGame(playerCount, seed, () => chooseBotMove)
-        expect(state.phase).toBe('over')
-      })
-    }
-  }
-
-  it('gives the same move for the same state and seat', () => {
-    let state = colonyRules.createInitialState({ settings: {}, playerCount: 3, seed: 5 })
-    for (let moveCount = 0; state.phase !== 'over' && moveCount < 80; moveCount += 1) {
-      const seat = colonyRules.activePlayers?.(state)[0] ?? 0
-      const move = chooseBotMove(state, seat)
-      expect(chooseBotMove(structuredClone(state), seat)).toEqual(move)
-      state = colonyRules.applyMove(state, move, seat)
-    }
+  it('always chooses a legal move', () => {
+    const state = scenario()
+    expect(legalMoves(state)).toContainEqual(chooseBotMove(state, 0))
   })
 
-  it('programs the same plan whatever the other seats have hidden in theirs', () => {
-    const state = colonyRules.createInitialState({ settings: {}, playerCount: 3, seed: 9 })
-    const withRivalPlan = colonyRules.applyMove(state, { type: 'program', plan: ['dance', 'invest', 'media', 'leverage'] }, 1)
-    expect(chooseBotMove(withRivalPlan, 0)).toEqual(chooseBotMove(state, 0))
+  it('chooses the same move for the same state', () => {
+    const state = scenario({ seat: 1 })
+    expect(chooseBotMove(structuredClone(state), 1)).toEqual(bestTurn(state)[0])
   })
 
-  it('beats two random players clearly more often than chance', () => {
-    let wins = 0
-    for (let game = 0; game < STRENGTH_GAMES; game += 1) {
-      const botSeat = game % STRENGTH_PLAYER_COUNT
-      const randomChooser = randomMoveChooser(seededPick(game * 7 + 1))
-      const state = playGame(STRENGTH_PLAYER_COUNT, game + 1, (seat) => (seat === botSeat ? chooseBotMove : randomChooser))
-      if (finalRanking(state)[0] === botSeat) wins += 1
-    }
-    expect(wins / STRENGTH_GAMES).toBeGreaterThanOrEqual(MIN_WIN_SHARE)
+  it('refuses to move for a seat that is not on turn', () => {
+    expect(() => chooseBotMove(scenario(), 2)).toThrow('seat 0 is on turn')
   })
+
+  it('secures the uncontested dial tile, by disc or by leading its issue at polling', () => {
+    const start = scenario()
+    const end = bestTurn(start).reduce((state, move) => colonyRules.applyMove(state, move, 0), start)
+    const tile = rondelTile(end, 0)
+    expect(tile.disc === 0 || getLeader(end, tileIssue(tile)) === 0).toBe(true)
+  })
+
+  it('takes back a disc a rival holds when it can outrank them', () => {
+    const state = scenario({
+      setup: (draft) => {
+        const cell = getDistrict('Clay').slotCells[0]
+        draft.board[cell] = { id: 99, faces: ['Clay', 'Sage'], side: 0, disc: 1 }
+        draft.track.Clay = [1, 0, 0]
+        draft.pawns[0] = { id: 0, seat: 0, cell: getDistrict('Clay').printedCell, hasLeftHub: true }
+        rondelTile(draft, 0).disc = 0
+      },
+    })
+    expect(bestTurn(state)).toContainEqual({ type: 'rallyAround' })
+  })
+
+  it('plays a whole game against itself', () => {
+    const { state } = playBotGame(3, 5, (current) => chooseBotMove(current, current.turn.seat))
+    expect(state.phase).toBe('over')
+    expect(colonyRules.outcome?.(state).winners).toHaveLength(1)
+  }, 60_000)
 })

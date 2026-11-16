@@ -10,6 +10,7 @@ npm run lint       # TypeScript type checking (tsc --noEmit)
 npm test           # vitest
 npm run build      # production build
 npm run deploy     # build and publish to GitHub Pages
+npm run sim -- [games] [playerCounts]   # bot-vs-bot games, summarised (e.g. npm run sim -- 20 3,4)
 npm run init-game -- <repo-name> <game-id> "<Title>"   # one-time rename of a fresh template copy
 ```
 
@@ -20,12 +21,12 @@ A browser game for 2–5 players taking turns in order, with no backend of its o
 The multiplayer platform (lobby, seats, transports, status screens) is **GameKit**'s `game-kit/turns`, a package pinned in `package.json` to a release tag of poeticmatter/GameKit (local copy: `C:\Code\GameKit`).
 
 - `src/game/`: the game, Colony Collapse. `index.ts` exports `game: GameModule`.
-  - `rules/`: the pure rules engine (`colonyRules`), its selectors, and tests. Resolution runs on a JSON stack of tasks; a task waiting for a choice is a `PendingDecision`, answered by a `decide` move. `rules/testing/` has scenario helpers and a bot that plays whole games.
-  - `bot/`: the computer opponent (`chooseBotMove`, GameKit's `GameModule.bot`): simulates each answer a decision allows and scores the result (`evaluate.ts`, weights in `weights.ts`); plans are scored heuristically (`plan.ts`). Pure and deterministic, and it never reads a rival's hidden plan.
-  - `data/`: the 45 seed cards and 30 hex tiles.
+  - `rules/`: the pure rules engine (`colonyRules`), its selectors, and tests. On this branch players spend action points on their own turn; `actions.ts` carries out each paid action, `flow.ts` turns the dial and ends turns and rounds, and `moves.ts` lists the legal moves. `rules/testing/` has scenario helpers and a random player that plays whole games.
+  - `bot/`: the computer opponent (`chooseBotMove`, GameKit's `GameModule.bot`): a beam search over the whole turn's actions (`search.ts`) that scores where each finished turn leaves the board (`evaluate.ts`, weights in `weights.ts`). Pure and deterministic; it never peeks at the bag.
+  - `data/`: the 30 hex tiles.
   - `board/`: pure board geometry, palette, rondel and track constants.
   - `art/`: SVG pieces ported from the physical prototype's asset project (C:\Codessets\ColonyCollapseAssets).
-  - `ui/`: the board screen; `ui/decisions/` has one view per decision kind.
+  - `ui/`: the board screen; `ui/turn/` has the controls for the player on turn.
 - `docs/digital-rules.md` is the authoritative rules spec for this build (the designer's rulings on top of the v7.1 rules doc). Change it together with the engine.
 - `src/game.config.ts`: `GAME_CONFIG`: the game id, title, tagline, and Supabase settings read from `.env.local`.
 - `src/App.tsx`: renders `<TurnBasedGameApp config={GAME_CONFIG} game={game} />`. GameKit routes on the URL (`?room=CODE[&mode=async]`); solo playtests have no URL.
@@ -34,8 +35,8 @@ The multiplayer platform (lobby, seats, transports, status screens) is **GameKit
 ### Rules contract
 
 - `createInitialState({ settings, playerCount, seed })` and `applyMove(state, move)` must be pure and deterministic. Keep randomness in the game state, seeded from `seed`, and draw with GameKit's `nextIndex` / `nextRandom`, so every client gets the same results.
-- `activePlayers(state)` lists the seats whose moves the game accepts: every seat still programming during the simultaneous programming phase, otherwise the one seat on turn (or whoever a decision is waiting for). `activePlayer` is the first of them, null once over. `applyMove(state, move, player)` is told who moved; moves don't name their seat.
-- Plans and Leverage draws are hidden by the board only (they're in the shared state). Always read plans through `visiblePlanSlot`, and draw seat colours and names through `lookOf` (the log stores `{seat:N}` tokens for this reason).
+- `activePlayers(state)` is the one seat on turn, or empty once the game is over. `applyMove(state, move, player)` is told who moved; moves don't name their seat.
+- Draw seat colours and names through `lookOf` (the log stores `{seat:N}` tokens for this reason).
 - `applyMove` throws GameKit's `IllegalMoveError` for a move that breaks the rules; GameKit catches it and leaves the state alone.
 
 ### Seats and transports (in GameKit)

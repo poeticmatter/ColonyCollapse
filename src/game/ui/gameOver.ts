@@ -29,5 +29,5 @@ export function tiebreakNote(rows: readonly RankingRow[], nameOf: (seat: Seat) =
   if (first.discs !== second.discs) {
     return `${winner} and ${nameOf(second.seat)} tied on VP; ${winner} wins on control discs on the board (${first.discs} to ${second.discs}).`
   }
-  return `${winner} and ${nameOf(second.seat)} tied on VP and discs; ${winner} wins by sitting earlier in clockwise order from the final start player.`
+  return `${winner} and ${nameOf(second.seat)} tied on VP and discs; ${winner} wins by sitting earlier in clockwise order from whoever started round 5.`
 }

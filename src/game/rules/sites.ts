@@ -1,5 +1,5 @@
-import { getCellInfo, getDistrict, getNeighbourKeys, type CellKey } from '../board/geometry'
-import { ISSUES, type Issue } from '../board/palette'
+import { getCellInfo, getNeighbourKeys, type CellKey } from '../board/geometry'
+import type { Issue } from '../board/palette'
 import type { GameState, HexTile, Seat, SiteRef } from './types'
 
 export interface SiteView {
@@ -50,28 +50,6 @@ export function cellSite(cell: CellKey): SiteRef {
 
 export function rondelSite(slot: number): SiteRef {
   return { type: 'rondel', slot }
-}
-
-export function isSameSite(first: SiteRef, second: SiteRef): boolean {
-  if (first.type === 'rondel') return second.type === 'rondel' && first.slot === second.slot
-  return second.type === 'cell' && first.cell === second.cell
-}
-
-/** The cells of a district that hold something to rally: its printed hex, then each filled slot. */
-export function districtSites(state: GameState, issue: Issue): SiteRef[] {
-  const district = getDistrict(issue)
-  return [district.printedCell, ...district.slotCells].map(cellSite).filter((site) => readSite(state, site) !== null)
-}
-
-/** Every tile in play, rondel first, then the board district by district. */
-export function allTileSites(state: GameState): SiteRef[] {
-  const rondelSites = state.rondel.flatMap((tile, slot) => (tile ? [rondelSite(slot)] : []))
-  const boardSites = ISSUES.flatMap((issue) =>
-    getDistrict(issue)
-      .slotCells.filter((cell) => state.board[cell])
-      .map(cellSite),
-  )
-  return [...rondelSites, ...boardSites]
 }
 
 /** The cell itself and its neighbours, where something can be rallied. */

@@ -1,37 +1,26 @@
 import { IllegalMoveError, type GameOutcome, type GameRules } from 'game-kit/turns'
 import { applyColonyMove } from './engine'
-import { topTask } from './stack'
-import { isDecisionTask } from './registry'
 import { finalRanking } from './scoring'
 import { createInitialState } from './setup'
 import type { GameState, Move, Seat, Settings } from './types'
 
 const ROUND_END_REASON = 'Ending the round draws new tiles.'
-const CARD_DRAW_REASON = "Drawing cards can't be undone."
-
-function seatsToProgram(state: GameState): Seat[] {
-  return state.players.flatMap((player, seat) => (player.plan === null ? [seat] : []))
-}
 
 function activePlayers(state: GameState): Seat[] {
-  if (state.phase === 'over' || !state.resolution) return state.phase === 'programming' ? seatsToProgram(state) : []
-  const task = topTask(state)
-  const waiting = task !== null && isDecisionTask(task) ? task.seat : state.resolution.order[state.resolution.orderIndex]
-  return [waiting]
+  return state.phase === 'over' ? [] : [state.turn.seat]
 }
 
 function activePlayer(state: GameState): Seat | null {
   return activePlayers(state)[0] ?? null
 }
 
-/** A move can't be undone if it draws cards or tiles at random: it would reveal what's coming. */
+/** A move can't be undone if it draws tiles at random: it would reveal what's coming. */
 function irreversibleReason(state: GameState, move: Move): string | null {
   const seat = activePlayer(state)
-  if (seat === null || move.type === 'program') return null
+  if (seat === null) return null
   try {
     const next = applyColonyMove(state, move, seat)
-    if (next.drawCount === state.drawCount) return null
-    return next.round === state.round ? CARD_DRAW_REASON : ROUND_END_REASON
+    return next.drawCount === state.drawCount ? null : ROUND_END_REASON
   } catch (error) {
     if (error instanceof IllegalMoveError) return null
     throw error
@@ -52,25 +41,22 @@ export const colonyRules: GameRules<Settings, GameState, Move> = {
   outcome,
 }
 
-export type { Decision, PendingDecision } from './decisions'
-export type { GameState, Move, Seat, Settings, SlotNumber } from './types'
+export type { ActionMove, ActionType, GameState, Move, Seat, Settings } from './types'
+export { ACTION_COST, ACTION_POINTS_PER_TURN, FINAL_ROUND } from './constants'
+export { isDialOnLastSlot } from './flow'
+export { legalMoveResults, legalMoves, type MoveResult } from './moves'
 export {
-  cardById,
   cellView,
-  currentTurn,
+  countBoardDiscs,
+  dialTile,
   districtStandings,
-  effectiveController,
-  holdsOngoing,
-  isTileMediaLocked,
-  pendingDecision,
-  scores,
+  finalRanking,
+  pawnOf,
+  pawnSteps,
+  rallyAroundGains,
   tileIssue,
-  trackPosition,
-  unprogrammedActions,
-  visiblePlanSlot,
+  turnsLeftInRound,
   type CellView,
-  type CurrentTurn,
   type DistrictStanding,
 } from './selectors'
-export { finalRanking } from './scoring'
 export { splitLogText, type LogTextPart } from './util'

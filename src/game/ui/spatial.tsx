@@ -2,33 +2,27 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { CellKey } from '../board/geometry'
 
 /**
- * What the active decision wants the board and rondel to show: which hexes can be clicked,
- * which are already picked, and which would be affected. Decision panels register one while
- * they are on screen; the board and rondel read it.
+ * What the turn controls want the board to show: which hexes can be clicked,
+ * which are already picked, and which would be affected. The turn panel registers one while
+ * it is on screen; the board reads it.
  */
 export interface SpatialSelection {
   clickableCells: ReadonlySet<CellKey>
-  clickableSlots: ReadonlySet<number>
   selectedCells: ReadonlySet<CellKey>
-  selectedSlots: ReadonlySet<number>
   /** Hexes shown as "would be rallied" but not clickable. */
   previewCells: ReadonlySet<CellKey>
   onCellClick?: (cell: CellKey) => void
-  onSlotClick?: (slot: number) => void
 }
 
 const EMPTY_CELLS: ReadonlySet<CellKey> = new Set()
-const EMPTY_SLOTS: ReadonlySet<number> = new Set()
 
 export const NO_SELECTION: SpatialSelection = {
   clickableCells: EMPTY_CELLS,
-  clickableSlots: EMPTY_SLOTS,
   selectedCells: EMPTY_CELLS,
-  selectedSlots: EMPTY_SLOTS,
   previewCells: EMPTY_CELLS,
 }
 
-/** A selection with only the parts a decision cares about. */
+/** A selection with only the parts the caller cares about. */
 export function spatialSelection(parts: Partial<SpatialSelection>): SpatialSelection {
   return { ...NO_SELECTION, ...parts }
 }

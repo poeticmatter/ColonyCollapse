@@ -9,6 +9,11 @@ import { ISSUES, type Issue } from './palette'
 
 export const RONDEL_SLOT_COUNT = ISSUES.length
 
+/** The dial starts every round on slot 1. */
+export const DIAL_START_SLOT = 0
+/** The mark sits between the last slot and slot 1: stepping off this slot passes it and ends the round. */
+export const LAST_SLOT_BEFORE_MARK = RONDEL_SLOT_COUNT - 1
+
 /** The same radius as a board cell, since a tile has to sit in both. */
 export const RONDEL_HEX_RADIUS = BOARD_CELL_RADIUS
 export const RONDEL_HEX_APOTHEM = (RONDEL_HEX_RADIUS * Math.sqrt(3)) / 2
@@ -58,3 +63,9 @@ export const RONDEL_SLOTS: readonly RondelSlot[] = ISSUES.map((issue, index) => 
     badgeCenter: pointOnRing(RONDEL_BADGE_RING_RADIUS, angleDegrees),
   }
 })
+
+/** The mark sits halfway between the last slot and slot 1. */
+export const RONDEL_MARK_ANGLE_DEGREES = RONDEL_SLOTS[LAST_SLOT_BEFORE_MARK].angleDegrees + DEGREES_BETWEEN_SLOTS / 2
+
+/** How far out from the centre the mark reaches: past the hexes, up to the badge ring. */
+export const RONDEL_MARK_OUTER_RADIUS = RONDEL_BADGE_RING_RADIUS

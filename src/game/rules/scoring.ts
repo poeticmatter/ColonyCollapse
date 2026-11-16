@@ -49,11 +49,11 @@ export function countBoardDiscs(state: GameState): number[] {
 
 /**
  * Seats from first to last: most victory points, then most control discs on the board, then the
- * earliest in clockwise order from the start player.
+ * earliest in clockwise order from the player who took the first turn of the round.
  */
 export function finalRanking(state: GameState): Seat[] {
   const discs = countBoardDiscs(state)
-  const clockwiseDistance = (seat: Seat) => (seat - state.startPlayer + state.playerCount) % state.playerCount
+  const clockwiseDistance = (seat: Seat) => (seat - state.roundStarter + state.playerCount) % state.playerCount
   return range(state.playerCount).sort(
     (a, b) =>
       state.players[b].victoryPoints - state.players[a].victoryPoints ||

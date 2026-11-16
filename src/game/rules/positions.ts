@@ -1,35 +1,15 @@
 import { ISSUES, type Issue } from '../board/palette'
-import { clampToTrack, TRACK_UPGRADE_SPACE } from '../board/track'
-import { logEvent } from './log'
+import { clampToTrack } from '../board/track'
 import type { GameState, Seat } from './types'
-import { seatName, titleCase } from './util'
 
 export function getPosition(state: GameState, seat: Seat, issue: Issue): number {
   return state.track[issue][seat]
 }
 
-/**
- * Moves a player to `target` on a track (clamped to the track). Reaching the upgrade space
- * upgrades the tile of that track's action at once. The upgrade is permanent, so reaching the
- * space again, or with the tile already upgraded, changes nothing.
- */
-export function setPosition(state: GameState, seat: Seat, issue: Issue, target: number): void {
-  const before = getPosition(state, seat, issue)
-  const after = clampToTrack(target)
-  state.track[issue][seat] = after
-  const hasReachedUpgradeSpace = before < TRACK_UPGRADE_SPACE && after >= TRACK_UPGRADE_SPACE
-  if (!hasReachedUpgradeSpace) return
-  const action = state.trackAction[issue]
-  const tiles = state.players[seat].tiles
-  if (tiles[action] === 'upgraded') return
-  tiles[action] = 'upgraded'
-  logEvent(state, seat, `${seatName(seat)} reaches ${after} on ${issue}: the ${titleCase(action)} tile is upgraded.`)
-}
-
-/** Moves by `delta` and returns how far the player actually moved after clamping. */
+/** Moves by `delta`, stopping at the ends of the track, and returns how far the player actually moved. */
 export function adjustPosition(state: GameState, seat: Seat, issue: Issue, delta: number): number {
   const before = getPosition(state, seat, issue)
-  setPosition(state, seat, issue, before + delta)
+  state.track[issue][seat] = clampToTrack(before + delta)
   return getPosition(state, seat, issue) - before
 }
 
@@ -45,4 +25,9 @@ export function getLeader(state: GameState, issue: Issue): Seat | null {
 /** Neighbours in the ring order; Clay and Mauve are not adjacent. */
 export function areAdjacentIssues(first: Issue, second: Issue): boolean {
   return Math.abs(ISSUES.indexOf(first) - ISSUES.indexOf(second)) === 1
+}
+
+/** The issues next to `issue` in ring order (one at either end of the ring, two otherwise). */
+export function adjacentIssues(issue: Issue): Issue[] {
+  return ISSUES.filter((other) => areAdjacentIssues(issue, other))
 }

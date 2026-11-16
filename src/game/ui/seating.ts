@@ -11,9 +11,3 @@ export function seatsFromViewer(playerCount: number, viewer: Seat | null): Seat[
   const first = viewer ?? 0
   return Array.from({ length: playerCount }, (_, offset) => (first + offset) % playerCount)
 }
-
-/** "Blue", "Blue and Green", "Red, Blue and Green". */
-export function joinNames(names: readonly string[]): string {
-  if (names.length <= 1) return names.join('')
-  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
-}

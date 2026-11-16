@@ -1,12 +1,14 @@
 import type { KeyboardEvent, ReactNode } from 'react'
 import { hexPointsAt } from '../board/geometry'
-import { GOLD_FILL, ISSUE_DEEP, ISSUE_FILL, ISSUE_INK } from '../board/palette'
+import { GOLD_DEEP, GOLD_FILL, ISSUE_DEEP, ISSUE_FILL, ISSUE_INK } from '../board/palette'
 import {
   RONDEL_BADGE_GAP,
   RONDEL_BADGE_RADIUS,
   RONDEL_DIAL_RADIUS,
   RONDEL_HEX_APOTHEM,
   RONDEL_HEX_RADIUS,
+  RONDEL_MARK_ANGLE_DEGREES,
+  RONDEL_MARK_OUTER_RADIUS,
   RONDEL_SIZE,
   RONDEL_SLOTS,
   RONDEL_SLOT_COUNT,
@@ -26,6 +28,9 @@ const DIAL_PIVOT_COLOR = '#0A0F1D'
 const DIAL_PIVOT_HUB_COLOR = '#94A3B8'
 const HIGHLIGHT_FILL_OPACITY = 0.16
 const HIGHLIGHT_OUTSET = 4
+
+const MARK_WIDTH = 7
+const MARK_FLAG_RADIUS = 16
 
 const ARROW_CLEARANCE = 9
 const ARROW_HEAD = { length: 12, halfWidth: 8 }
@@ -104,6 +109,20 @@ function DialSocket() {
   )
 }
 
+/** The mark between the last slot and slot 1: the dial passing it ends the round. */
+function RoundMark() {
+  const inner = pointOnRay(RONDEL_DIAL_RADIUS + 4, RONDEL_MARK_ANGLE_DEGREES)
+  const outer = pointOnRay(RONDEL_MARK_OUTER_RADIUS, RONDEL_MARK_ANGLE_DEGREES)
+  return (
+    <g pointerEvents="none">
+      <title>The mark: when the dial passes it, the round ends</title>
+      <line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke={GOLD_DEEP} strokeWidth={MARK_WIDTH + 3} strokeLinecap="round" />
+      <line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke={GOLD_FILL} strokeWidth={MARK_WIDTH} strokeLinecap="round" />
+      <circle cx={outer.x} cy={outer.y} r={MARK_FLAG_RADIUS} fill={GOLD_FILL} stroke={GOLD_DEEP} strokeWidth="4" />
+    </g>
+  )
+}
+
 interface RondelViewProps {
   /** A piece drawn in a slot, as SVG around the slot's centre (use `Centered` to place a sized piece). */
   slotContent?: (slotIndex: number) => ReactNode
@@ -163,6 +182,8 @@ export function RondelView({ slotContent, pointerPosition, onSlotClick, highligh
             {slotContent?.(slot.index)}
           </g>
         ))}
+
+        <RoundMark />
 
         {RONDEL_SLOTS.map((slot) => (
           <SlotBadge key={slot.index} slot={slot} />
