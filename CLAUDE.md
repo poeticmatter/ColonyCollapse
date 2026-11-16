@@ -45,6 +45,19 @@ The multiplayer platform (lobby, seats, transports, status screens) is **GameKit
 - **Live (PeerJS)**: the creator hosts and runs the rules; the game ends if the host closes the tab.
 - **Solo playtest**: one tester plays every seat; the seat being played is disguised as seat 0.
 
+## Rules document and design log
+
+Claude keeps two documents in `docs/` and updates them in the same change as the work they describe, without being asked:
+
+- **`docs/rules.md`**: the game's rules as it plays them now, in plain language, as a new player would read them: what you're trying to do, what's on the table, setup, a turn, how it ends. No code names, file paths or jargon. Every change to the rules or content updates it, so it always matches the game.
+- **`docs/design-log.md`**: what changed and why, newest first, in two sections:
+  - **Game design**: the game itself: rules, content (board, tiles, cards, numbers) and balance.
+  - **Game development**: everything else: the board and UI, visuals, GameKit bumps, bots, tooling, and fixes that don't change the rules.
+
+  One entry per change, headed by its date and a short title, in the section it belongs to; a change that does both gets an entry in each. Say what changed for players and, when it's known, why. Leave how it was built to the commits.
+
+In Colony Collapse, `docs/rules.md` is separate from the designer's rules (`docs/Colony Collapse - Rules v7.1 11-02-26.md`) and from `docs/digital-rules.md`, the precise spec the engine follows: the designer's text stays theirs, and `rules.md` explains the same game to a player.
+
 ## Rules
 
 - All state changes go through `rules.applyMove`. UI components only render state and submit moves.
